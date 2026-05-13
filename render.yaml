@@ -20,6 +20,6 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        value: "https://journey-backend-3dnr.onrender.com/api"
+        value: "https://journey-backend-uph3.onrender.com/api"
       - key: VITE_DELIVERY_API_URL
-        value: "https://journey-backend-3dnr.onrender.com/api/delivery"
+        value: "https://journey-backend-uph3.onrender.com/api/delivery"
