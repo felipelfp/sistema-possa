@@ -15,7 +15,6 @@ services:
   - type: web
     name: journey-frontend
     env: static
-    plan: free
     rootDir: react-journey
     buildCommand: npm install && npm run build
     staticPublishPath: dist
