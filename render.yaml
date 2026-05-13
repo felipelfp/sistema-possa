@@ -9,7 +9,7 @@ services:
     startCommand: npm start
     envVars:
       - key: MONGO_URI
-        sync: false # Você vai colar o seu link do MongoDB no painel do Render
+        value: "mongodb+srv://felipe008lucas:Fe535356%40@cluster0.rl5twua.mongodb.net/journey_db?appName=Cluster0"
 
   # 2. Frontend (React Site)
   - type: web
@@ -20,6 +20,6 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        sync: false # Você vai colar o link do backend + /api
+        value: "https://journey-backend-3dnr.onrender.com/api"
       - key: VITE_DELIVERY_API_URL
-        sync: false # Você vai colar o link do backend + /api/delivery
+        value: "https://journey-backend-3dnr.onrender.com/api/delivery"
