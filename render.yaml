@@ -3,6 +3,7 @@ services:
   - type: web
     name: journey-backend
     env: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
@@ -14,6 +15,7 @@ services:
   - type: web
     name: journey-frontend
     env: static
+    plan: free
     rootDir: react-journey
     buildCommand: npm install && npm run build
     staticPublishPath: dist
