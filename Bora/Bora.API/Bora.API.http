@@ -1,0 +1,6 @@
+@Bora.API_HostAddress = http://localhost:5082
+
+GET {{Bora.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -23,7 +23,8 @@ const Clock: React.FC = () => {
     const formattedDate = time.toLocaleDateString('pt-BR', {
         weekday: 'long',
         day: 'numeric',
-        month: 'long'
+        month: 'long',
+        year: 'numeric'
     });
 
     return (

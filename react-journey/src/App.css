@@ -1,18 +1,19 @@
 .app-layout {
     display: flex;
-    height: 100vh;
-    width: 100vw;
+    height: 125vh; /* 100vh / 0.8 = 125vh para preencher o fundo da tela real */
+    width: 125vw;  /* 100vw / 0.8 = 125vw para preencher a largura da tela real */
     overflow: hidden;
-    padding: 2vh 2vw;
+    padding: 0;
     box-sizing: border-box;
+    /* Zoom está no body no index.css */
 }
 
 .main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 96vh;
-    border-radius: 24px;
+    height: 100%; /* Ocupar 100% do pai compensado (125vh) */
+    border-radius: 0;
     position: relative;
     overflow: hidden;
 }
@@ -21,9 +22,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    margin-bottom: 1rem;
-    border-radius: 20px;
+    padding: 1rem 1.5rem;
+    margin: 0; /* Colar no topo e laterais */
+    border-radius: 0; /* Barra reta para preencher a largura */
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
@@ -115,6 +116,58 @@
     }
 }
 
+/* Header Controls */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.total-goal-badge {
+    background: rgba(25, 25, 35, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.total-goal-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(255, 105, 180, 0.4));
+}
+
+.total-goal-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.total-goal-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.total-goal-brl {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+}
+
+.total-goal-usd {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #3498db;
+    margin-top: 2px;
+}
+
 .exchange-rate-badge {
     display: flex;
     align-items: center;
@@ -199,7 +252,7 @@
 .content-area {
     flex: 1;
     overflow-y: auto;
-    padding: 0 1rem 2rem 1rem;
+    padding: 0 0.5rem 1rem 0.5rem; /* Padding ultra reduzido */
 }
 
 /* Scrollbar styling for content area */

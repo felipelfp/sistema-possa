@@ -1,0 +1,9 @@
+{
+  "name": "sistema-completo",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "cd react-journey && npm install && cd ../backend && npm install",
+    "dev": "npx concurrently \"cd backend && npm run dev\" \"cd react-journey && npm run dev\"",
+    "este-aqui": "npx concurrently \"cd backend && npm run dev\" \"cd react-journey && npm run dev\""
+  }
+}

@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [react()],
     base: './', // Use relative paths for assets
     server: {
+        host: true, // Listen on all network IP addresses
         port: 5173,
         open: true
     }

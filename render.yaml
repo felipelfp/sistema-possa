@@ -1,0 +1,24 @@
+services:
+  # 1. Backend (API Node.js + MongoDB)
+  - type: web
+    name: journey-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false # Você vai colar o seu link do MongoDB no painel do Render
+
+  # 2. Frontend (React Site)
+  - type: web
+    name: journey-frontend
+    env: static
+    rootDir: react-journey
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Você vai colar o link do backend + /api
+      - key: VITE_DELIVERY_API_URL
+        sync: false # Você vai colar o link do backend + /api/delivery

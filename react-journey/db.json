@@ -1,0 +1,317 @@
+{
+  "objectives": [],
+  "debts": [
+    {
+      "id": 1,
+      "titular": "Casa",
+      "banco": "IPTU",
+      "valor": 50,
+      "tipo": "parcelado",
+      "vlrP": 50,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 2,
+      "titular": "Casa",
+      "banco": "Celular",
+      "valor": 99,
+      "tipo": "avista",
+      "vlrP": 99,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 3,
+      "titular": "Felipe",
+      "banco": "TIM",
+      "valor": 110.13,
+      "tipo": "avista",
+      "vlrP": 44.05,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 4,
+      "titular": "Casa",
+      "banco": "Internet",
+      "valor": 130,
+      "tipo": "avista",
+      "vlrP": 130,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 5,
+      "titular": "Felipe",
+      "banco": "ShopeePay",
+      "valor": 138.74,
+      "tipo": "avista",
+      "vlrP": 55.25,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 6,
+      "titular": "Fernanda",
+      "banco": "ShopeePay",
+      "valor": 139.88,
+      "tipo": "avista",
+      "vlrP": 69.93,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 7,
+      "titular": "Felipe",
+      "banco": "Vivo",
+      "valor": 145.84,
+      "tipo": "avista",
+      "vlrP": 138.54,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 8,
+      "titular": "Casa",
+      "banco": "Luz",
+      "valor": 150,
+      "tipo": "avista",
+      "vlrP": 150,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 9,
+      "titular": "Casa",
+      "banco": "Condominio",
+      "valor": 350,
+      "tipo": "avista",
+      "vlrP": 350,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 10,
+      "titular": "Felipe",
+      "banco": "Santander",
+      "valor": 545.87,
+      "tipo": "avista",
+      "vlrP": 85.33,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 11,
+      "titular": "Felipe",
+      "banco": "Nubank",
+      "valor": 700.48,
+      "tipo": "avista",
+      "vlrP": 218.8,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 12,
+      "titular": "Felipe",
+      "banco": "Senff",
+      "valor": 999.88,
+      "tipo": "avista",
+      "vlrP": 712.54,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 13,
+      "titular": "Felipe",
+      "banco": "Pefisa (ARC4)",
+      "valor": 1247.29,
+      "tipo": "avista",
+      "vlrP": 296.89,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 14,
+      "titular": "Felipe",
+      "banco": "Claro",
+      "valor": 1250.94,
+      "tipo": "avista",
+      "vlrP": 493.87,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 15,
+      "titular": "Fernanda",
+      "banco": "Simplic",
+      "valor": 1301.73,
+      "tipo": "avista",
+      "vlrP": 310.41,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 16,
+      "titular": "Felipe",
+      "banco": "Casas Bahia (Rec)",
+      "valor": 1348.11,
+      "tipo": "avista",
+      "vlrP": 1241.04,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 17,
+      "titular": "Casa",
+      "banco": "Aluguel",
+      "valor": 1350,
+      "tipo": "avista",
+      "vlrP": 1350,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 18,
+      "titular": "Fernanda",
+      "banco": "Havan",
+      "valor": 1393.84,
+      "tipo": "avista",
+      "vlrP": 1064.29,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 19,
+      "titular": "Felipe",
+      "banco": "Renner",
+      "valor": 1842.31,
+      "tipo": "avista",
+      "vlrP": 712.76,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 20,
+      "titular": "Felipe",
+      "banco": "Magalu (Recovery)",
+      "valor": 1729.88,
+      "tipo": "avista",
+      "vlrP": 411.35,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 21,
+      "titular": "Felipe",
+      "banco": "B. Brasil (Ativos)",
+      "valor": 2002.5,
+      "tipo": "parcelado",
+      "vlrP": 300,
+      "qtd": 7,
+      "status": "pendente"
+    },
+    {
+      "id": 22,
+      "titular": "Fernanda",
+      "banco": "Nubank",
+      "valor": 2807.18,
+      "tipo": "avista",
+      "vlrP": 1473.86,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 23,
+      "titular": "Felipe",
+      "banco": "Neon",
+      "valor": 3103.18,
+      "tipo": "avista",
+      "vlrP": 471.37,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 24,
+      "titular": "Felipe",
+      "banco": "Estacio",
+      "valor": 4899.9,
+      "tipo": "avista",
+      "vlrP": 4378.28,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 25,
+      "titular": "Felipe",
+      "banco": "Havan",
+      "valor": 5311.02,
+      "tipo": "avista",
+      "vlrP": 765.49,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 26,
+      "titular": "Fernanda",
+      "banco": "Santander",
+      "valor": 8239.27,
+      "tipo": "avista",
+      "vlrP": 1472.72,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": 27,
+      "titular": "Felipe",
+      "banco": "Banco Pan (BTG)",
+      "valor": 52963.55,
+      "tipo": "avista",
+      "vlrP": 8956.14,
+      "qtd": 1,
+      "status": "pendente"
+    },
+    {
+      "id": "17737737547243078",
+      "titular": "Felipe",
+      "banco": "Omni",
+      "valor": 29000,
+      "tipo": "parcelado",
+      "vlrP": 260,
+      "qtd": 22,
+      "status": "pendente",
+      "entrada": 400
+    }
+  ],
+  "transactions": [],
+  "tasks": [
+    {
+      "error": "Resource not found",
+      "status": "todo",
+      "completed": false,
+      "id": "17737799956746173"
+    },
+    {
+      "error": "Resource not found",
+      "id": "17737799980001375",
+      "status": "done",
+      "completed": true
+    },
+    {
+      "error": "Resource not found",
+      "id": "17737799980276010",
+      "status": "testing",
+      "completed": false
+    },
+    {
+      "title": "tim",
+      "date": "2026-03-17",
+      "description": "",
+      "status": "done",
+      "priority": "normal",
+      "completed": true,
+      "id": "17737800148302131"
+    }
+  ],
+  "settings": {}
+}

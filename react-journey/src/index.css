@@ -45,6 +45,7 @@ body {
         radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
         radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
     background-attachment: fixed;
+    zoom: 0.8; /* Aplicando o zoom de 80% globalmente no body para enquadramento perfeito */
 }
 
 [data-theme='light'] body {
@@ -54,14 +55,13 @@ body {
 #root {
     width: 100%;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 2rem 1rem;
+    display: block; /* Mudado de flex para evitar problemas de alinhamento com zoom */
+    padding: 0;
     box-sizing: border-box;
 }
 
 .app-container {
-    max-width: 1200px;
+    max-width: none; /* Removido limite de 1200px */
     width: 100%;
     position: relative;
     z-index: 1;
@@ -75,6 +75,7 @@ body {
     letter-spacing: -0.03em;
     background: linear-gradient(to right, #ffffff, #b3b3b3);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }

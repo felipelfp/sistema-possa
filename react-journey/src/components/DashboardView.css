@@ -3,8 +3,8 @@
     flex-direction: column;
     gap: 2rem;
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: none; /* Removido para preencher as laterais */
+    margin: 0; /* Removido centralização */
     animation: fadeIn 0.5s ease-out;
 }
 

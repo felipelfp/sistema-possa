@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         builder => builder
-            .WithOrigins("http://localhost:5173") // Adjust if your React app runs on a different port
+            .AllowAnyOrigin() // Allow all IPs/Origins
             .AllowAnyMethod()
             .AllowAnyHeader());
 });

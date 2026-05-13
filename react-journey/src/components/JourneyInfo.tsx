@@ -1,34 +1,154 @@
 import React, { useState } from 'react';
 import './JourneyInfo.css';
+import { Objective } from './Objectives';
+import { Deposit } from './DepositForm';
+
+interface Trophy {
+    nome: string;
+    valor: number;
+}
+
+// Lista ajustada e ORDENADA: removido Motorola, iPhone ajustado
+const initialTrophies: Trophy[] = [
+    { nome: 'Penteadeira Ditália', valor: 900 },
+    { nome: 'Guarda-Roupa Casal Luiza', valor: 1200 },
+    { nome: 'Air Fryer Mondial Forno Oven', valor: 600 },
+    { nome: 'Sanduicheira Britânia BGR25B', valor: 200 },
+    { nome: 'Cadeira Gamer Belmóveis', valor: 700 },
+    { nome: 'Fogão Cooktop Portátil Elétrico', valor: 200 },
+    { nome: 'Smart TV 65" LG', valor: 4000 },
+    { nome: 'Cortina Voil c/ Forro (6 unidades)', valor: 1200 },
+    { nome: 'Secadora de Roupas Fischer', valor: 500 },
+    { nome: 'Mesa de Escritório Anah', valor: 500 },
+    { nome: 'Sofá Cama Retrátil E Reclinável', valor: 2500 },
+    { nome: 'Conjunto Cama Box c/ Molas', valor: 1500 },
+    { nome: 'Cabeceira Box Casal com Led', valor: 900 },
+    { nome: 'Panela de Arroz Elétrica Mondial', valor: 200 },
+    { nome: 'Panela de Pressão Elétrica Digital Mondial', valor: 500 },
+    { nome: 'Panela elétrica de arroz Oster', valor: 200 },
+    { nome: 'Panela de Pressão Elétrica Britânia', valor: 500 },
+    { nome: 'Panela Elétrica PE-28 Redonda Mondial', valor: 200 },
+    { nome: 'Panela Elétrica Mangiare Agratto', valor: 200 },
+    { nome: 'Pipoqueira Elétrica Popflix Mondial', valor: 250 },
+    { nome: 'Panela Multifuncional Micro Pressão', valor: 200 },
+    { nome: 'Monitor Gamer Curvo (2 unidades)', valor: 1600 },
+    { nome: 'Impressora Multifuncional HP', valor: 900 },
+    { nome: 'Cafeteira Nescafé Dolce Gusto', valor: 500 },
+    { nome: 'Suporte dois monitores', valor: 500 },
+    { nome: 'Secador Taiff Style', valor: 200 },
+    { nome: 'Régua Cabo Hub USB', valor: 150 },
+    { nome: 'Conjunto Sala de Jantar', valor: 700 },
+    { nome: 'Notebook Dell Inspiron', valor: 4000 },
+    { nome: 'Grill Mondial G-03-RC', valor: 300 },
+    { nome: 'Sanduicheira/Grill Britânia Press', valor: 200 },
+    { nome: 'Panela Elet P/Fondue Oster', valor: 400 },
+    { nome: 'Fritadeira Elétrica Air Fry Britânia', valor: 500 },
+    { nome: 'PlayStation 5 Slim', valor: 4000 },
+    { nome: 'PC Gamer Skill Aquarium', valor: 2500 },
+    { nome: 'Sapateira Madesa Isis', valor: 600 },
+    { nome: 'iPhone (apenas 2)', valor: 6000 }
+].sort((a, b) => a.valor - b.valor);
 
 interface JourneyInfoProps {
     exchangeRate: number;
     accumulatedBRL: number;
+    targetBRL: number;
+    targetUSD: number;
+    objectives: Objective[];
+    transactions: Deposit[];
 }
 
-const JourneyInfo: React.FC<JourneyInfoProps> = ({ exchangeRate, accumulatedBRL }) => {
-    console.log('JourneyInfo rendering with:', { exchangeRate, accumulatedBRL });
-    const [currentMonth, setCurrentMonth] = useState(1);
-    const totalMonths = 100;
-    const targetBRL = 200000;
+const JourneyInfo: React.FC<JourneyInfoProps> = ({ exchangeRate, accumulatedBRL, targetBRL, targetUSD, objectives, transactions }) => {
+    const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    const formatUSD = (val: number) => val.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    
+    // Cálculos dinâmicos baseados na Meta Total (custo das dívidas)
+    const metaPorMesBRL = targetBRL / 100; 
+    const metaPorDiaBRL = targetBRL / 3000;
+    
+    const metaPorMesUSD = targetUSD / 100;
+    const metaPorDiaUSD = targetUSD / 3000;
+    
+    let daysPassed = 0;
+    if (transactions && transactions.length > 0) {
+        const sortedDates = [...transactions]
+            .map(t => new Date(t.date).getTime())
+            .sort((a, b) => a - b);
+        const firstDate = sortedDates[0];
+        const lastDate = new Date().getTime();
+        daysPassed = Math.max(1, Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)));
+    }
+
+    // Aporte mensal de simulação (restaurado)
     const monthlyContribution = 2000;
-
-    const handlePrevMonth = () => {
-        if (currentMonth > 1) setCurrentMonth(prev => prev - 1);
-    };
-
-    const handleNextMonth = () => {
-        if (currentMonth < totalMonths) setCurrentMonth(prev => prev + 1);
-    };
-
-    // Use real accumulated value for progress, but keep month nav for projection/simulation if desired
-    // Or we can just show the real progress based on accumulatedBRL
-    const progress = (accumulatedBRL / targetBRL) * 100;
-    const targetUSD = targetBRL / exchangeRate;
+    const [simMonths, setSimMonths] = useState(0);
+    const projectedTotal = accumulatedBRL + (simMonths * monthlyContribution);
 
     return (
-        <div className="journey-card glass">
-            <h2>Test Journey Info</h2>
+        <div className="adventure-container">
+            <header className="hero-section">
+                <div className="hero-content">
+                    <h1>🚀 Meta & Saldo 🚀</h1>
+                    
+                    <div className="meta-principal">
+                        <div className="meta-card-stats grid-3">
+                             <div className="meta-stat-item">
+                                <span className="stat-label">💰 Saldo Real</span>
+                                <span className="stat-value highlight-gold">
+                                    {formatBRL(accumulatedBRL)}
+                                </span>
+                            </div>
+                            <div className="meta-stat-item">
+                                <span className="stat-label">⏳ Jornada</span>
+                                <span className="stat-value">
+                                    Mês {Math.ceil(daysPassed/30)} de 100
+                                </span>
+                                <span style={{fontSize: '0.7em', color: 'rgba(255,255,255,0.5)'}}>
+                                    ({daysPassed} dias acumulando)
+                                </span>
+                            </div>
+                            <div className="meta-stat-item">
+                                <span className="stat-label">🎯 Meta Total</span>
+                                <span className="stat-value">{formatBRL(targetBRL)}</span>
+                                <span style={{fontSize: '0.8em', color: '#3498db', fontWeight: 'bold'}}>USD {formatUSD(targetUSD)}</span>
+                            </div>
+                        </div>
+
+                        <div className="meta-card-stats grid-2" style={{marginTop: '15px'}}>
+                            <div className="meta-stat-item">
+                                <span className="stat-label">📅 Meta Mensal</span>
+                                <span className="stat-value">{formatBRL(metaPorMesBRL)}</span>
+                                <span style={{fontSize: '0.8em', color: '#3498db', fontWeight: 'bold'}}>USD {formatUSD(metaPorMesUSD)}</span>
+                            </div>
+                            <div className="meta-stat-item">
+                                <span className="stat-label">📈 Projeção (+{simMonths}m)</span>
+                                <span className="stat-value" style={{color: '#3498db'}}>{formatBRL(projectedTotal)}</span>
+                            </div>
+                        </div>
+
+                         <div className="simulation-controls" style={{marginTop: '20px'}}>
+                            <input 
+                                type="range" 
+                                min="0" max="60" 
+                                value={simMonths} 
+                                onChange={(e) => setSimMonths(parseInt(e.target.value))}
+                                style={{width: '100%', accentColor: '#FFD700'}} 
+                            />
+                            <p style={{fontSize: '0.8em', marginTop: '5px', opacity: 0.8, textAlign: 'center'}}>
+                                Arraste para simular aporte mensal de R$ 2.000,00
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div className="adventure-content">
+                <div className="info-card-original glass">
+                    <p style={{textAlign: 'center', opacity: 0.8}}>
+                        Siga os aportes mensais para atingir a meta atualizada de {formatBRL(targetBRL)} em 100 meses.
+                    </p>
+                </div>
+            </div>
         </div>
     );
 };

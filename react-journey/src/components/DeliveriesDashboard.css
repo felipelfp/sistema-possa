@@ -1,0 +1,316 @@
+.deliveries-wrapper {
+    font-family: inherit;
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.deliveries-wrapper .del-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.deliveries-wrapper .del-card:hover {
+    border-color: var(--text-secondary);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.deliveries-wrapper .del-card-full {
+    grid-column: 1 / -1;
+}
+
+.deliveries-wrapper .del-card-title {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.deliveries-wrapper .del-card-title-icon {
+    font-size: 1.2rem;
+}
+
+.deliveries-wrapper .del-card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-card-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.deliveries-wrapper .del-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.deliveries-wrapper .del-btn:hover {
+    background: var(--border-color);
+}
+
+.deliveries-wrapper .del-btn-success {
+    background: rgba(46, 204, 113, 0.15);
+    border-color: rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+}
+
+.deliveries-wrapper .del-btn-success:hover {
+    background: rgba(46, 204, 113, 0.25);
+}
+
+.deliveries-wrapper .del-btn-danger {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.deliveries-wrapper .del-btn-danger:hover {
+    background: rgba(231, 76, 60, 0.25);
+}
+
+.deliveries-wrapper .del-input-group {
+    margin-bottom: 16px;
+}
+
+.deliveries-wrapper .del-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.deliveries-wrapper .del-input-group input {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.deliveries-wrapper .del-input-group input:focus {
+    outline: none;
+    border-color: var(--text-secondary);
+}
+
+.deliveries-wrapper .del-status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.deliveries-wrapper .del-status-working {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.deliveries-wrapper .del-status-off {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.deliveries-wrapper .del-week-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.deliveries-wrapper .del-day-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.deliveries-wrapper .del-day-card:hover {
+    border-color: var(--text-secondary);
+}
+
+.deliveries-wrapper .del-day-card.active {
+    background: var(--glass-bg);
+    border-color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-day-card.completed {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.deliveries-wrapper .del-day-name {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.deliveries-wrapper .del-day-card.active .del-day-name {
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-day-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.deliveries-wrapper .del-day-card.active .del-day-date {
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-day-km {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.deliveries-wrapper .del-progress-fill {
+    height: 100%;
+    background: #3498db;
+    transition: width 0.5s ease;
+    border-radius: 6px;
+}
+
+.deliveries-wrapper .del-positive { color: #2ecc71; }
+.deliveries-wrapper .del-negative { color: #e74c3c; }
+.deliveries-wrapper .del-neutral { color: #3498db; }
+
+.deliveries-wrapper .del-time-display {
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: "Courier New", monospace;
+    color: var(--text-primary);
+}
+
+.deliveries-wrapper .del-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.deliveries-wrapper .del-stat-box {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.deliveries-wrapper .del-stat-box-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.deliveries-wrapper .del-stat-box-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.deliveries-wrapper .del-financial-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.deliveries-wrapper .del-metas-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.deliveries-wrapper .del-meta-box {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.deliveries-wrapper .del-history-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.deliveries-wrapper .del-history-title {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.deliveries-wrapper .del-history-content {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.deliveries-wrapper .del-history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}

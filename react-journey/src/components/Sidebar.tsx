@@ -4,22 +4,25 @@ import './Sidebar.css';
 
 interface SidebarProps {
     activeSection: string;
-    setActiveSection: (section: string) => void;
+    onNavigate: (section: string) => void;
     isOpen: boolean;
     onClose: () => void;
     onLogout?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection, isOpen, onClose, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeSection, onNavigate: setActiveSection, isOpen, onClose, onLogout }) => {
     const { theme, toggleTheme } = useTheme();
 
     const menuItems = [
         { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+        { id: 'entrega', icon: '🛵', label: 'Entregas' },
         { id: 'meta', icon: '🎯', label: 'Meta & Saldo' },
+        { id: 'tasks', icon: '📅', label: 'Calendário & Tarefas' },
         { id: 'br_goals', icon: '🇧🇷', label: 'Objetivos BR' },
         { id: 'usa_goals', icon: '🇺🇸', label: 'Objetivos USA' },
         { id: 'emergency', icon: '🚨', label: 'Emergência' },
         { id: 'report', icon: '📈', label: 'Relatório' },
+        { id: 'premium', icon: '💎', label: 'Contas 2026' },
     ];
 
     const handleItemClick = (id: string) => {

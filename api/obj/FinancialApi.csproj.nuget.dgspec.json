@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\felipe.possa\\Desktop\\felipe\\usa (cópia)\\api\\FinancialApi.csproj": {}
+    "D:\\felipe\\usa (cópia)\\api\\FinancialApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\felipe.possa\\Desktop\\felipe\\usa (cópia)\\api\\FinancialApi.csproj": {
+    "D:\\felipe\\usa (cópia)\\api\\FinancialApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\felipe.possa\\Desktop\\felipe\\usa (cópia)\\api\\FinancialApi.csproj",
+        "projectUniqueName": "D:\\felipe\\usa (cópia)\\api\\FinancialApi.csproj",
         "projectName": "FinancialApi",
-        "projectPath": "C:\\Users\\felipe.possa\\Desktop\\felipe\\usa (cópia)\\api\\FinancialApi.csproj",
-        "packagesPath": "C:\\Users\\felipe.possa\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\felipe.possa\\Desktop\\felipe\\usa (cópia)\\api\\obj\\",
+        "projectPath": "D:\\felipe\\usa (cópia)\\api\\FinancialApi.csproj",
+        "packagesPath": "C:\\Users\\LENOVO\\.nuget\\packages\\",
+        "outputPath": "D:\\felipe\\usa (cópia)\\api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\felipe.possa\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\LENOVO\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net10.0": {
@@ -82,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

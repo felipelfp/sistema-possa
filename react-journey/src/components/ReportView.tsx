@@ -5,15 +5,13 @@ import './ReportView.css';
 interface ReportViewProps {
     accumulatedBRL: number;
     objectives: Objective[];
+    targetBRL: number;
 }
 
-const ReportView: React.FC<ReportViewProps> = ({ accumulatedBRL, objectives }) => {
-    const targetBRL = 200000;
+const ReportView: React.FC<ReportViewProps> = ({ accumulatedBRL, objectives, targetBRL }) => {
     const totalAllocated = objectives.reduce((sum, obj) => sum + obj.accumulatedBRL, 0);
-    const totalAllocatedTarget = objectives.reduce((sum, obj) => sum + obj.targetBRL, 0);
+    // Meta Total agora é dinâmica via props
     const unallocated = accumulatedBRL - totalAllocated;
-
-    // Surplus calculation: (Accumulated - Target)
     const surplus = accumulatedBRL - targetBRL;
 
     const data = [
@@ -33,20 +31,20 @@ const ReportView: React.FC<ReportViewProps> = ({ accumulatedBRL, objectives }) =
             color: '#38f9d7',
             completed: false
         }
-    ].sort((a, b) => b.value - a.value);
+    ].sort((a, b) => {
+        if (b.value !== a.value) return b.value - a.value;
+        return b.target - a.target; // Maior meta primeiro se acumulado for igual
+    });
 
     return (
         <div className="report-view glass">
-            <h2 className="report-title">Relatório de Alocação</h2>
+            <h2 className="report-title">Relatório de Aporte</h2>
 
             <div className="report-header-summary">
                 <div className="summary-item">
                     <span className="summary-label">Meta Total</span>
                     <span className="summary-value">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(targetBRL)}
-                    </span>
-                    <span className="summary-subtitle">
-                        (100 meses x R$ 2.000,00)
                     </span>
                 </div>
                 <div className="summary-divider"></div>
@@ -74,7 +72,7 @@ const ReportView: React.FC<ReportViewProps> = ({ accumulatedBRL, objectives }) =
                             <th>Objetivo</th>
                             <th className="text-right">Meta</th>
                             <th className="text-right">Em Andamento</th>
-                            <th className="text-center">% da Meta (200k)</th>
+                            <th className="text-center">% da Meta Total</th>
                             <th>Progresso na Meta</th>
                             <th className="text-center">Status</th>
                         </tr>
@@ -127,7 +125,7 @@ const ReportView: React.FC<ReportViewProps> = ({ accumulatedBRL, objectives }) =
                                 <span className="cell-name">TOTAL</span>
                             </td>
                             <td className="text-right font-mono highlight-total">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAllocatedTarget)}
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(targetBRL)}
                             </td>
                             <td className="text-right font-mono highlight-total">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAllocated)}

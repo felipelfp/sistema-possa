@@ -10,6 +10,7 @@ namespace FinancialApi.Data
         public DbSet<Objective> Objectives { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<AppSettings> Settings { get; set; }
+        public DbSet<Debt> Debts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
