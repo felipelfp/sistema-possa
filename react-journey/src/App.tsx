@@ -16,6 +16,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import './App.css';
 
 import { api } from './services/api';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export const initialDebts = [
     { id: 1, titular: "Casa", banco: "IPTU", valor: 50.00, tipo: "avista", vlrP: 50.00, qtd: 1, status: "pendente" },
@@ -247,6 +248,20 @@ const AppContent: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    // Lógica de Atualização Automática do PWA
+    const {
+        offlineReady: [offlineReady, setOfflineReady],
+        needRefresh: [needRefresh, setNeedRefresh],
+        updateServiceWorker,
+    } = useRegisterSW({
+        onRegistered(r) {
+            console.log('SW Registered: ' + r);
+        },
+        onRegisterError(error) {
+            console.log('SW registration error', error);
+        },
+    });
     
     // Global Task Scheduling
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -760,6 +775,46 @@ const AppContent: React.FC = () => {
                 objectives={objectives}
                 debts={debts}
             />
+            {/* Alerta de Nova Versão Disponível */}
+            {needRefresh && (
+                <div className="pwa-update-toast" style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    left: '20px',
+                    background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                    color: 'white',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+                    zIndex: 10000,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    <span style={{ fontWeight: 'bold' }}>🚀 Nova versão disponível!</span>
+                    <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Clique abaixo para atualizar e usar as novas funções.</span>
+                    <button 
+                        onClick={() => updateServiceWorker(true)}
+                        style={{
+                            background: 'white',
+                            color: '#2980b9',
+                            border: 'none',
+                            padding: '8px 24px',
+                            borderRadius: '8px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            width: '100%'
+                        }}
+                    >
+                        Atualizar Agora
+                    </button>
+                </div>
+            )}
             </>
         );
     } catch (e) {
