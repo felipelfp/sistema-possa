@@ -47,6 +47,14 @@ export const initialDebts = [
     { id: 27, titular: "Felipe", banco: "Banco Pan (BTG)", valor: 52963.55, tipo: "avista", vlrP: 8956.14, qtd: 1, status: "pendente" }
 ];
 
+// Função centralizada de cálculo de proposta — única fonte de verdade
+const calcProposta = (d: any): number => {
+    const vp = typeof d.vlrP === 'number' ? d.vlrP : parseFloat(String(d.vlrP || '0').replace(',', '.')) || 0;
+    const qtd = parseInt(d.qtd) || 1;
+    const ent = typeof d.entrada === 'number' ? d.entrada : parseFloat(String(d.entrada || '0').replace(',', '.')) || 0;
+    return d.tipo === 'parcelado' ? (vp * qtd) + ent : vp;
+};
+
 const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => void }> = ({ debts, onUpdateDebt }) => {
     const [notificacoesVisiveis, setNotificacoesVisiveis] = useState<any[]>([]);
 
@@ -59,36 +67,67 @@ const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => v
 
         const hoje = new Date();
         const diaAtual = hoje.getDate();
-        const amanha = new Date(hoje.getFullYear(), hoje.getMonth(), diaAtual + 1);
-        const diaAmanha = amanha.getDate();
+        
+        // Define os próximos 3 dias para notificação
+        const diasAlvo = [
+            diaAtual,
+            new Date(hoje.getFullYear(), hoje.getMonth(), diaAtual + 1).getDate(),
+            new Date(hoje.getFullYear(), hoje.getMonth(), diaAtual + 2).getDate()
+        ];
 
         const contasAlvo = debts.filter(d => {
             if (!d || d.status === 'quitado') return false;
             const v = parseInt(d.vencimento) || 5;
-            return v === diaAtual || v === diaAmanha;
+            return diasAlvo.includes(v);
         });
 
         setNotificacoesVisiveis(contasAlvo);
 
+        const sendNotification = async (title: string, options: any) => {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            
+            // Tenta via Service Worker (melhor para Mobile/PWA)
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification(title, options);
+            } else {
+                // Fallback para Desktop clássico
+                new Notification(title, options);
+            }
+        };
+
         contasAlvo.forEach(d => {
             const v = parseInt(d.vencimento) || 5;
-            const tipoDia = v === diaAtual ? 'HOJE' : 'AMANHÃ';
+            let tipoDia = `Dia ${v}`;
+            if (v === diaAtual) tipoDia = 'HOJE';
+            else if (v === diasAlvo[1]) tipoDia = 'AMANHÃ';
+            
             const storageKey = `notif_sent_${d.id}_${hoje.toISOString().split('T')[0]}`;
             const sentCount = parseInt(localStorage.getItem(storageKey) || '0');
 
-            if (sentCount < 2 && 'Notification' in window && Notification.permission === 'granted') {
-                try {
-                    new Notification(`Lembrete de Conta: ${d.banco}`, {
-                        body: `Sua conta de ${d.titular} vence ${tipoDia} (Dia ${v}). Já realizou o pagamento?`,
-                        icon: '/icon.svg'
-                    });
-                    localStorage.setItem(storageKey, String(sentCount + 1));
-                } catch (e) {
-                    console.error('Erro ao enviar notificacao nativa:', e);
-                }
+            if (sentCount < 2 && Notification.permission === 'granted') {
+                sendNotification(`Lembrete de Conta: ${d.banco}`, {
+                    body: `Vence ${tipoDia}. Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calcProposta(d))}`,
+                    icon: '/icon.svg',
+                    vibrate: [200, 100, 200],
+                    tag: `debt-${d.id}-${hoje.toISOString().split('T')[0]}`
+                });
+                localStorage.setItem(storageKey, String(sentCount + 1));
             }
         });
     }, [debts]);
+
+    const requestPermission = () => {
+        if (!('Notification' in window)) return alert("Este navegador não suporta notificações.");
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                alert("Notificações ativadas com sucesso!");
+                window.location.reload(); // Recarrega para aplicar
+            } else {
+                alert("As notificações foram bloqueadas. Você precisará ativar manualmente nas configurações do navegador (clicando no cadeado ao lado da URL).");
+            }
+        });
+    };
 
     if (notificacoesVisiveis.length === 0) return null;
 
@@ -108,15 +147,36 @@ const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => v
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', fontWeight: 'bold' }}>
                     <span>⚠️</span>
-                    <span>Lembrete de Vencimento (Amanhã e Hoje)</span>
+                    <span>Contas Próximas ao Vencimento (Próximos 3 Dias)</span>
                 </div>
-                <span style={{ fontSize: '0.8rem', color: '#a1a1aa' }}>Notificação dupla diária ativa</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {Notification.permission !== 'granted' && (
+                        <button 
+                            onClick={requestPermission}
+                            style={{
+                                background: '#f59e0b',
+                                color: '#000',
+                                border: 'none',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            🔔 Ativar Alertas
+                        </button>
+                    )}
+                    <span style={{ fontSize: '0.8rem', color: '#a1a1aa' }}>Notificação dupla diária ativa</span>
+                </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {notificacoesVisiveis.map((d, index) => {
                     const v = parseInt(d.vencimento) || 5;
-                    const isHoje = v === new Date().getDate();
-                    const vlr = d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0;
+                    const hojeDia = new Date().getDate();
+                    const isHoje = v === hojeDia;
+                    const isAmanha = v === (new Date(new Date().getFullYear(), new Date().getMonth(), hojeDia + 1).getDate());
+                    const vlr = calcProposta(d);
                     return (
                         <div key={d.id || index} style={{
                             display: 'flex',
@@ -125,7 +185,7 @@ const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => v
                             background: 'rgba(0, 0, 0, 0.3)',
                             padding: '10px 14px',
                             borderRadius: '10px',
-                            borderLeft: `4px solid ${isHoje ? '#ef4444' : '#f59e0b'}`,
+                            borderLeft: `4px solid ${isHoje ? '#ef4444' : (isAmanha ? '#f59e0b' : '#3498db')}`,
                             flexWrap: 'wrap',
                             gap: '10px'
                         }}>
@@ -133,14 +193,14 @@ const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => v
                                 <strong style={{ color: '#fff' }}>{d.banco}</strong>
                                 <span style={{ color: '#a1a1aa', fontSize: '0.85rem' }}>({d.titular})</span>
                                 <span style={{
-                                    background: isHoje ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                                    color: isHoje ? '#ef4444' : '#f59e0b',
+                                    background: isHoje ? 'rgba(239, 68, 68, 0.2)' : (isAmanha ? 'rgba(245, 158, 11, 0.2)' : 'rgba(52, 152, 219, 0.2)'),
+                                    color: isHoje ? '#ef4444' : (isAmanha ? '#f59e0b' : '#3498db'),
                                     padding: '2px 8px',
                                     borderRadius: '6px',
                                     fontSize: '0.75rem',
                                     fontWeight: 'bold'
                                 }}>
-                                    Vence {isHoje ? 'HOJE' : 'AMANHÃ'} (Dia {v})
+                                    {isHoje ? 'Vence HOJE' : (isAmanha ? 'Vence AMANHÃ' : `Vence em breve (Dia ${v})`)}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './PremiumDashboard.css';
 
+// Função centralizada de cálculo — usada em TODOS os pontos do sistema
+const calcProposta = (d: any): number => {
+    const vp = typeof d.vlrP === 'number' ? d.vlrP : parseFloat(String(d.vlrP || '0').replace(',', '.')) || 0;
+    const qtd = parseInt(d.qtd) || 1;
+    const ent = typeof d.entrada === 'number' ? d.entrada : parseFloat(String(d.entrada || '0').replace(',', '.')) || 0;
+    if (d.tipo === 'parcelado') {
+        return (vp * qtd) + ent;
+    }
+    return vp; // avista: só o valor da proposta
+};
+
 const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove, onScheduleTask }) => {
     // 1. Inicialização direta e segura
     const [localDebts, setLocalDebts] = useState<any[]>(Array.isArray(debts) ? debts : []);
@@ -46,13 +57,9 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
         let orig = 0, prop = 0;
         listaFiltrada.forEach(d => {
             if (!d) return;
-            // Sanitização de valores para evitar NaN
             const v = typeof d.valor === 'number' ? d.valor : parseFloat(String(d.valor).replace(',', '.')) || 0;
-            const vp = typeof d.vlrP === 'number' ? d.vlrP : parseFloat(String(d.vlrP).replace(',', '.')) || 0;
-            const q = parseInt(d.qtd) || 1;
-            const ent = typeof d.entrada === 'number' ? d.entrada : parseFloat(String(d.entrada).replace(',', '.')) || 0;
             orig += v;
-            prop += d.tipo === 'parcelado' ? (vp * q) + ent : vp;
+            prop += calcProposta(d);
         });
         return { orig, prop, eco: Math.max(0, orig - prop) };
     }, [listaFiltrada]);
@@ -72,6 +79,15 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
 
     const handleLocalEdit = (id: any, field: string, val: any) => {
         setLocalDebts(prev => prev.map(d => d.id === id ? { ...d, [field]: val } : d));
+    };
+
+    // Busca o debt mais atualizado do estado antes de sincronizar (evita bug de closure)
+    const handleSyncById = (id: any) => {
+        setLocalDebts(prev => {
+            const current = prev.find(d => d.id === id);
+            if (current) handleSync(current);
+            return prev;
+        });
     };
 
     const move = (dir: number) => {
@@ -118,6 +134,10 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                             <input className="premium-input" placeholder="Ex: Bradesco" value={newDebt.banco} onChange={e=>setNewDebt({...newDebt, banco: e.target.value})}/>
                         </div>
                         <div>
+                            <label className="premium-label">Valor Original (R$)</label>
+                            <input className="premium-input" type="number" placeholder="0.00" value={newDebt.valor} onChange={e=>setNewDebt({...newDebt, valor: e.target.value})}/>
+                        </div>
+                        <div>
                             <label className="premium-label">Condição</label>
                             <select className="premium-select" value={newDebt.tipo || 'avista'} onChange={e=>setNewDebt({...newDebt, tipo: e.target.value})}>
                                 <option value="avista">À Vista</option>
@@ -125,18 +145,14 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                             </select>
                         </div>
                         <div>
-                            <label className="premium-label">Valor Original (R$)</label>
-                            <input className="premium-input" type="number" placeholder="0.00" value={newDebt.valor} onChange={e=>setNewDebt({...newDebt, valor: e.target.value})}/>
+                            <label className="premium-label">{newDebt.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Valor Proposta (R$)'}</label>
+                            <input className="premium-input" type="number" placeholder="0.00" value={newDebt.vlrP} onChange={e=>setNewDebt({...newDebt, vlrP: e.target.value})}/>
                         </div>
                         {newDebt.tipo === 'parcelado' && (
                             <>
                                 <div>
                                     <label className="premium-label">Entrada (R$)</label>
                                     <input className="premium-input" type="number" placeholder="0.00" value={newDebt.entrada} onChange={e=>setNewDebt({...newDebt, entrada: e.target.value})}/>
-                                </div>
-                                <div>
-                                    <label className="premium-label">Valor Parcela (R$)</label>
-                                    <input className="premium-input" type="number" placeholder="0.00" value={newDebt.vlrP} onChange={e=>setNewDebt({...newDebt, vlrP: e.target.value})}/>
                                 </div>
                                 <div>
                                     <label className="premium-label">Qtd Parcelas</label>
@@ -148,25 +164,30 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                             <label className="premium-label">Vencimento (Dia)</label>
                             <input className="premium-input" type="number" min="1" max="31" value={newDebt.vencimento} onChange={e=>setNewDebt({...newDebt, vencimento: e.target.value})}/>
                         </div>
-                        <button className="premium-btn-primary" onClick={async ()=>{
-                            if(!newDebt.banco || !newDebt.valor || !onAdd) return alert("Informe banco e valor original!");
-                            setIsSaving(true);
-                            const vOrig = parseFloat(newDebt.valor) || 0;
-                            const isParc = newDebt.tipo === 'parcelado';
-                            await onAdd({ 
-                                titular: newDebt.titular, 
-                                banco: newDebt.banco, 
-                                valor: vOrig, 
-                                tipo: newDebt.tipo, 
-                                vlrP: isParc ? (parseFloat(newDebt.vlrP) || 0) : vOrig, 
-                                entrada: isParc ? (parseFloat(newDebt.entrada) || 0) : 0,
-                                qtd: parseInt(newDebt.qtd) || 1, 
-                                status: 'pendente',
-                                vencimento: parseInt(newDebt.vencimento) || 5
-                            });
-                            setNewDebt({ titular: newDebt.titular, banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1', entrada: '', vlrP: '' });
-                            setIsSaving(false);
-                        }}>+ Novo Registro</button>
+                        <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div className="premium-eco-label" style={{ margin: 0, flex: 1, textAlign: 'center', fontSize: '0.85rem' }}>
+                                Preview Total: {fmt.format(calcProposta(newDebt))}
+                            </div>
+                            <button className="premium-btn-primary" style={{ flex: 1 }} onClick={async ()=>{
+                                if(!newDebt.banco || !newDebt.valor || !onAdd) return alert("Informe banco e valor original!");
+                                setIsSaving(true);
+                                const vOrig = parseFloat(newDebt.valor) || 0;
+                                const isParc = newDebt.tipo === 'parcelado';
+                                await onAdd({ 
+                                    titular: newDebt.titular, 
+                                    banco: newDebt.banco, 
+                                    valor: vOrig, 
+                                    tipo: newDebt.tipo, 
+                                    vlrP: parseFloat(newDebt.vlrP) || vOrig, 
+                                    entrada: isParc ? (parseFloat(newDebt.entrada) || 0) : 0,
+                                    qtd: isParc ? (parseInt(newDebt.qtd) || 1) : 1, 
+                                    status: 'pendente',
+                                    vencimento: parseInt(newDebt.vencimento) || 5
+                                });
+                                setNewDebt({ titular: newDebt.titular, banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1', entrada: '', vlrP: '' });
+                                setIsSaving(false);
+                            }}>+ Novo Registro</button>
+                        </div>
                     </div>
                 </div>
 
@@ -242,31 +263,30 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">Titular</label><strong style={{display: 'block', padding: '8px 0'}}>{d.titular}</strong></div>
-                                            <div><label className="premium-label">Banco</label><input className="premium-input" value={d.banco || ''} onChange={e=>handleLocalEdit(d.id, 'banco', e.target.value)} onBlur={()=>handleSync(d)}/></div>
+                                            <div><label className="premium-label">Banco</label><input className="premium-input" value={d.banco || ''} onChange={e=>handleLocalEdit(d.id, 'banco', e.target.value)} onBlur={()=>handleSyncById(d.id)}/></div>
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">Valor (R$)</label><input className="premium-input" type="number" value={d.valor || ''} onChange={e=>handleLocalEdit(d.id, 'valor', parseFloat(e.target.value))} onBlur={()=>handleSync(d)}/></div>
-                                            <div><label className="premium-label">Condição</label><select className="premium-select" value={d.tipo || 'avista'} onChange={e=>{handleLocalEdit(d.id, 'tipo', e.target.value); handleSync({...d, tipo: e.target.value})}}>
+                                            <div><label className="premium-label">Valor (R$)</label><input className="premium-input" type="number" value={d.valor || ''} onChange={e=>handleLocalEdit(d.id, 'valor', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
+                                            <div><label className="premium-label">Condição</label><select className="premium-select" value={d.tipo || 'avista'} onChange={e=>{handleLocalEdit(d.id, 'tipo', e.target.value); handleSyncById(d.id);}}>
                                                 <option value="avista">À Vista</option><option value="parcelado">Parcelado</option>
                                             </select></div>
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">{d.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Proposta (R$)'}</label><input className="premium-input" type="number" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', parseFloat(e.target.value))} onBlur={()=>handleSync(d)}/></div>
-                                            <div><label className="premium-label">Parcelas</label><input className="premium-input" type="number" value={d.qtd || 1} readOnly={d.tipo==='avista'} onChange={e=>handleLocalEdit(d.id, 'qtd', parseInt(e.target.value))} onBlur={()=>handleSync(d)}/></div>
+                                            <div><label className="premium-label">{d.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Proposta (R$)'}</label><input className="premium-input" type="number" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
+                                            <div><label className="premium-label">Parcelas</label><input className="premium-input" type="number" value={d.qtd || 1} readOnly={d.tipo==='avista'} onChange={e=>handleLocalEdit(d.id, 'qtd', parseInt(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
                                         </div>
                                         
                                         {d.tipo === 'parcelado' && (
                                             <div className="premium-form-row">
-                                                <div><label className="premium-label">Entrada (R$)</label><input className="premium-input" type="number" value={d.entrada || ''} onChange={e=>handleLocalEdit(d.id, 'entrada', parseFloat(e.target.value))} onBlur={()=>handleSync(d)} placeholder="0.00"/></div>
-                                                <div><label className="premium-label">Vencimento (Dia)</label><input className="premium-input" type="number" min="1" max="31" value={d.vencimento || 5} onChange={e=>handleLocalEdit(d.id, 'vencimento', parseInt(e.target.value))} onBlur={()=>handleSync(d)}/></div>
+                                                <div><label className="premium-label">Entrada (R$)</label><input className="premium-input" type="number" value={d.entrada || ''} onChange={e=>handleLocalEdit(d.id, 'entrada', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)} placeholder="0.00"/></div>
+                                                <div><label className="premium-label">Vencimento (Dia)</label><input className="premium-input" type="number" min="1" max="31" value={d.vencimento || 5} onChange={e=>handleLocalEdit(d.id, 'vencimento', parseInt(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
                                             </div>
                                         )}
                                         
                                         <div className="premium-eco-label">
-                                            Total: {fmt.format(d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0)} | Eco: {fmt.format((parseFloat(d.valor) || 0) - (d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0))}
+                                            Total: {fmt.format(calcProposta(d))} | Eco: {fmt.format((parseFloat(d.valor) || 0) - calcProposta(d))}
                                         </div>
                                         
                                         <div className="premium-form-row" style={{alignItems: 'center', marginTop: '5px'}}>
@@ -320,7 +340,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                     <tr key={d.id || `r-${i}`}>
                                         <td style={{fontWeight: 600}}>{d.banco}</td>
                                         <td>{fmt.format(d.valor || 0)}</td>
-                                        <td style={{color: 'var(--premium-warning)'}}>{fmt.format(d.tipo === 'parcelado' ? ((d.vlrP || 0) * (d.qtd || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0)}</td>
+                                        <td style={{color: 'var(--premium-warning)'}}>{fmt.format(calcProposta(d))}</td>
                                         <td className={`status-${d.status || 'pendente'}`}>{(d.status || 'pendente').toUpperCase()}</td>
                                         {onScheduleTask && <td>
                                             <button style={{background: 'rgba(52, 152, 219, 0.2)', border: '1px solid #3498db', color: '#3498db', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem'}} onClick={()=>onScheduleTask({title: `Conta: ${d.banco} - ${d.titular}`, referenceId: d.id, referenceType: 'DEBT'})}>Agendar Tarefa</button>

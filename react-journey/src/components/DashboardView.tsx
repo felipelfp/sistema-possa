@@ -43,13 +43,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
     const progress = targetBRL > 0 ? (accumulatedBRL / targetBRL) * 100 : 0;
 
+    const calcProposta = (d: any): number => {
+        const vp = typeof d.vlrP === 'number' ? d.vlrP : parseFloat(String(d.vlrP || '0').replace(',', '.')) || 0;
+        const qtd = parseInt(d.qtd) || 1;
+        const ent = typeof d.entrada === 'number' ? d.entrada : parseFloat(String(d.entrada || '0').replace(',', '.')) || 0;
+        return d.tipo === 'parcelado' ? (vp * qtd) + ent : vp;
+    };
+
     const totalDebtsOriginal = debts.reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
-    const totalDebtsProposta = debts.reduce((acc, d) => {
-        const vp = parseFloat(d.vlrP) || 0;
-        const q = parseInt(d.qtd) || 1;
-        const ent = d.tipo === 'parcelado' ? (parseFloat(d.entrada) || 0) : 0;
-        return acc + (d.tipo === 'parcelado' ? (vp * q) + ent : vp);
-    }, 0);
+    const totalDebtsProposta = debts.reduce((acc, d) => acc + calcProposta(d), 0);
 
     return (
         <div className="dashboard-view">
