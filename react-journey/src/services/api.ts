@@ -11,19 +11,18 @@ if (!envApiUrl) {
     if (isLocal) {
         envApiUrl = `http://localhost:5000/api`;
     } else {
-        // Se for no celular acessando o PC via IP na rede local
+        // Se for no celular acessando o PC via IP na rede local (ex: 192.168...)
         if (/^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
             envApiUrl = `http://${window.location.hostname}:5000/api`;
         } else {
-            // Se estiver em produção (Render), a API geralmente está no mesmo domínio /api
-            // ou o usuário deve configurar a VITE_API_URL.
-            // Aqui assumimos o padrão do Render onde a API é um serviço separado ou subdomínio.
-            envApiUrl = `https://sistema-possa-api.onrender.com/api`; // Nome provável do seu backend no Render
+            // URL OFICIAL DO SEU RENDER (extraída do render.yaml)
+            envApiUrl = `https://journey-backend-uph3.onrender.com/api`;
         }
     }
 }
 
 const API_URL = envApiUrl;
+console.log("🔌 Sistema tentando conectar em:", API_URL);
 
 // Helper for local storage fallback
 const getLocal = (key: string) => {
