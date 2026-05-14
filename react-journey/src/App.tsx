@@ -248,6 +248,8 @@ const AppContent: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isConnected, setIsConnected] = useState<boolean | null>(null); // null = carregando, true = online, false = offline
+
 
     // Lógica de Atualização Automática do PWA
     const {
@@ -325,12 +327,15 @@ const AppContent: React.FC = () => {
 
     const loadData = async () => {
         try {
+            setIsConnected(null); // Pendente
             const txs = await api.getTransactions();
-            if (Array.isArray(txs)) setTransactions(txs);
+            if (Array.isArray(txs)) {
+                setTransactions(txs);
+                setIsConnected(true);
+            }
 
             const objs = await api.getObjectives();
             if (Array.isArray(objs)) {
-                // Mescla objetivos padrão com os da API
                 const combined = [...initialObjectives];
                 objs.forEach((apiObj: Objective) => {
                     const idx = combined.findIndex(o => o.id === apiObj.id);
@@ -342,10 +347,8 @@ const AppContent: React.FC = () => {
 
             const dbts = await api.getDebts();
             if (Array.isArray(dbts)) {
-                // Mescla dívidas padrão com edições vindas da API (prioridade para a API)
                 const combinedDebts = [...initialDebts];
                 dbts.forEach((apiDebt: any) => {
-                    // Tenta encontrar pelo ID ou pelo par Banco+Titular (para garantir sincronia de contas padrão)
                     const idx = combinedDebts.findIndex(d => 
                         String(d.id) === String(apiDebt.id) || 
                         (d.banco === apiDebt.banco && d.titular === apiDebt.titular)
@@ -360,6 +363,7 @@ const AppContent: React.FC = () => {
             if (Array.isArray(tks)) setTasks(tks);
         } catch (err) {
             console.error("Erro ao carregar dados:", err);
+            setIsConnected(false); // Falha de conexão
         }
     };
 
@@ -667,20 +671,16 @@ const AppContent: React.FC = () => {
 
                 <main className="main-content">
                     <header className="top-bar">
-                        <div className="header-left">
+                        <div className="header-left" style={{ gap: '5px' }}>
                             <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
-                            <h1 className="page-title">
-                                {activeSection === 'dashboard' ? 'Dashboard' :
-                                 activeSection === 'entrega' ? 'Entregas' :
-                                 activeSection === 'meta' ? 'Meta & Saldo' :
-                                 activeSection === 'br_goals' ? 'Objetivos BR' :
-                                 activeSection === 'usa_goals' ? 'Objetivos USA' :
-                                 activeSection === 'emergency' ? 'Emergência' :
-                                 activeSection === 'tasks' ? 'Tarefas' :
-                                 activeSection === 'objectives' ? 'Todos os Objetivos' :
-                                 activeSection === 'premium' ? 'Contas 2026' :
-                                 'Relatório'}
-                            </h1>
+                            <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                background: isConnected === true ? '#10b981' : (isConnected === false ? '#ef4444' : '#f59e0b'),
+                                boxShadow: isConnected === true ? '0 0 8px #10b981' : 'none',
+                                marginLeft: '5px'
+                            }} title={isConnected === true ? 'Conectado ao Servidor' : 'Erro de Conexão'}></div>
                         </div>
 
                         <div className="header-controls">

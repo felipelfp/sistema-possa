@@ -2,10 +2,28 @@ import { Objective } from '../components/Objectives';
 import { Deposit } from '../components/DepositForm';
 
 let envApiUrl = import.meta.env.VITE_API_URL;
-if (envApiUrl && envApiUrl.includes('localhost') && window.location.hostname !== 'localhost') {
-    envApiUrl = envApiUrl.replace('localhost', window.location.hostname);
+
+// Se estivermos no Render ou qualquer domínio que não seja localhost,
+// e não tivermos uma URL de API configurada, tentamos usar a URL atual do navegador.
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+if (!envApiUrl) {
+    if (isLocal) {
+        envApiUrl = `http://localhost:5000/api`;
+    } else {
+        // Se for no celular acessando o PC via IP na rede local
+        if (/^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
+            envApiUrl = `http://${window.location.hostname}:5000/api`;
+        } else {
+            // Se estiver em produção (Render), a API geralmente está no mesmo domínio /api
+            // ou o usuário deve configurar a VITE_API_URL.
+            // Aqui assumimos o padrão do Render onde a API é um serviço separado ou subdomínio.
+            envApiUrl = `https://sistema-possa-api.onrender.com/api`; // Nome provável do seu backend no Render
+        }
+    }
 }
-const API_URL = envApiUrl || `http://${window.location.hostname}:5000/api`;
+
+const API_URL = envApiUrl;
 
 // Helper for local storage fallback
 const getLocal = (key: string) => {
