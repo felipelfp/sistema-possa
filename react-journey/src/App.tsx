@@ -268,8 +268,32 @@ const AppContent: React.FC = () => {
             }
 
             const dbts = await api.getDebts();
-            if (Array.isArray(dbts) && dbts.length > 0) {
-                setDebts(dbts);
+            if (Array.isArray(dbts)) {
+                let loadedDebts = dbts;
+                if (loadedDebts.length === 0) {
+                    loadedDebts = [...initialDebts];
+                    // Auto-seed no backend para persistir
+                    setTimeout(async () => {
+                        for (const d of initialDebts) {
+                            await api.addDebt(d).catch(() => {});
+                        }
+                    }, 1000);
+                } else {
+                    const combined = [...initialDebts];
+                    loadedDebts.forEach((apiDebt: any) => {
+                        const matchIndex = combined.findIndex(d => 
+                            String(d.id) === String(apiDebt.id) || 
+                            (d.banco === apiDebt.banco && d.titular === apiDebt.titular)
+                        );
+                        if (matchIndex === -1) {
+                            combined.push(apiDebt);
+                        } else {
+                            combined[matchIndex] = { ...combined[matchIndex], ...apiDebt };
+                        }
+                    });
+                    loadedDebts = combined;
+                }
+                setDebts(loadedDebts);
             }
             
             const tsks = await api.getTasks();
