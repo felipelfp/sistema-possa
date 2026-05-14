@@ -87,20 +87,38 @@
     }
 
     .page-title {
-        font-size: 1.2rem;
+        display: none; /* Remove 'Painel' / 'Dashboard' no mobile conforme solicitado */
     }
 
-    .header-controls {
-        gap: 0.5rem;
+    .total-goal-badge {
+        display: none; /* Remove meta total no mobile para dar espaço ao dólar */
     }
 
     .exchange-rate-badge {
-        padding: 0.4rem 0.8rem;
+        margin-left: auto;
+        padding: 6px 12px;
+        gap: 0.5rem;
+        background: rgba(67, 233, 123, 0.1);
+        border-color: rgba(67, 233, 123, 0.3);
+    }
+
+    .rate-value {
+        font-size: 1.3rem; /* Destaque maior para o valor do dólar */
+        font-weight: 800;
+    }
+
+    .rate-input-small {
+        display: none; /* Esconde o input no mobile para não poluir */
     }
 
     .rate-label {
         display: none;
-        /* Save space on mobile */
+    }
+
+    .header-controls {
+        gap: 0.5rem;
+        flex: 1;
+        justify-content: flex-end;
     }
 
     .sidebar-overlay {

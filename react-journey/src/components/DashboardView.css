@@ -18,6 +18,15 @@
     -webkit-text-fill-color: transparent;
 }
 
+@media (max-width: 768px) {
+    .section-title {
+        display: none; /* Remove 'Visão Geral' no mobile */
+    }
+    .dashboard-view {
+        gap: 1rem;
+    }
+}
+
 .dashboard-stats-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
