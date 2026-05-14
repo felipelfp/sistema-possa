@@ -249,6 +249,24 @@
 .status-quitado { color: var(--premium-success); }
 .status-andamento { color: var(--premium-warning); }
 
+.premium-status-badge.status-quitado {
+    border-color: var(--premium-success);
+    color: var(--premium-success);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.premium-status-badge.status-andamento {
+    border-color: var(--premium-warning);
+    color: var(--premium-warning);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.premium-status-badge.status-pendente {
+    border-color: var(--premium-text-muted);
+    color: var(--premium-text-muted);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .premium-saving-float {
     position: fixed;
     bottom: 20px;

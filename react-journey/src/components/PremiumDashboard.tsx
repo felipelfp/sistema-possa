@@ -28,10 +28,17 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
         minimumFractionDigits: 2 
     }), []);
 
-    // Sincronização de props para estado local
+    // Sincronização inteligente: só atualiza se o número de dívidas mudar ou se for o carregamento inicial
     useEffect(() => {
         if (Array.isArray(debts)) {
-            setLocalDebts(debts);
+            setLocalDebts(prev => {
+                // Se as listas forem idênticas em tamanho e o primeiro ID for igual, 
+                // assumimos que é uma atualização de sync e evitamos sobrescrever o que o usuário está digitando
+                if (prev.length === debts.length && prev.length > 0 && prev[0].id === debts[0].id) {
+                    return prev; 
+                }
+                return debts;
+            });
         }
     }, [debts]);
 
@@ -77,17 +84,27 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
         }
     };
 
+    const handleSyncById = async (id: any) => {
+        const debt = localDebts.find(d => d.id === id);
+        if (debt) {
+            await handleSync(debt);
+        }
+    };
+
     const handleLocalEdit = (id: any, field: string, val: any) => {
+        // Mantemos o valor original (string ou number) para não quebrar a digitação de decimais
         setLocalDebts(prev => prev.map(d => d.id === id ? { ...d, [field]: val } : d));
     };
 
-    // Busca o debt mais atualizado do estado antes de sincronizar (evita bug de closure)
-    const handleSyncById = (id: any) => {
-        setLocalDebts(prev => {
-            const current = prev.find(d => d.id === id);
-            if (current) handleSync(current);
-            return prev;
-        });
+    const handleStatusChange = async (id: any, newStatus: string) => {
+        // 1. Atualiza local imediatamente para UX rápida
+        setLocalDebts(prev => prev.map(d => d.id === id ? { ...d, status: newStatus } : d));
+        
+        // 2. Busca o objeto atualizado e envia ao banco
+        const target = localDebts.find(d => d.id === id);
+        if (target) {
+            await handleSync({ ...target, status: newStatus });
+        }
     };
 
     const move = (dir: number) => {
@@ -255,10 +272,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                             {listaFiltrada.length > 0 ? listaFiltrada.map((d, i) => (
                                 <div className="premium-carousel-slide" key={d.id || `d-${i}`}>
                                     <div className="premium-card">
-                                        <div className="premium-status-badge" style={{ 
-                                            borderColor: d.status==='quitado'?'#10b981':(d.status==='andamento'?'#f59e0b':'#71717a'), 
-                                            color: d.status==='quitado'?'#10b981':(d.status==='andamento'?'#f59e0b':'#71717a') 
-                                        }}>
+                                        <div className={`premium-status-badge status-${d.status || 'pendente'}`}>
                                             {(d.status || 'pendente').toUpperCase()}
                                         </div>
                                         
@@ -267,21 +281,21 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">Valor (R$)</label><input className="premium-input" type="number" value={d.valor || ''} onChange={e=>handleLocalEdit(d.id, 'valor', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
+                                            <div><label className="premium-label">Valor (R$)</label><input className="premium-input" value={d.valor || ''} onChange={e=>handleLocalEdit(d.id, 'valor', e.target.value)} onBlur={()=>handleSyncById(d.id)}/></div>
                                             <div><label className="premium-label">Condição</label><select className="premium-select" value={d.tipo || 'avista'} onChange={e=>{handleLocalEdit(d.id, 'tipo', e.target.value); handleSyncById(d.id);}}>
                                                 <option value="avista">À Vista</option><option value="parcelado">Parcelado</option>
                                             </select></div>
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">{d.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Proposta (R$)'}</label><input className="premium-input" type="number" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
-                                            <div><label className="premium-label">Parcelas</label><input className="premium-input" type="number" value={d.qtd || 1} readOnly={d.tipo==='avista'} onChange={e=>handleLocalEdit(d.id, 'qtd', parseInt(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
+                                            <div><label className="premium-label">{d.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Proposta (R$)'}</label><input className="premium-input" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', e.target.value)} onBlur={()=>handleSyncById(d.id)}/></div>
+                                            <div><label className="premium-label">Parcelas</label><input className="premium-input" type="number" value={d.qtd || 1} readOnly={d.tipo==='avista'} onChange={e=>handleLocalEdit(d.id, 'qtd', e.target.value)} onBlur={()=>handleSyncById(d.id)}/></div>
                                         </div>
                                         
                                         {d.tipo === 'parcelado' && (
                                             <div className="premium-form-row">
-                                                <div><label className="premium-label">Entrada (R$)</label><input className="premium-input" type="number" value={d.entrada || ''} onChange={e=>handleLocalEdit(d.id, 'entrada', parseFloat(e.target.value))} onBlur={()=>handleSyncById(d.id)} placeholder="0.00"/></div>
-                                                <div><label className="premium-label">Vencimento (Dia)</label><input className="premium-input" type="number" min="1" max="31" value={d.vencimento || 5} onChange={e=>handleLocalEdit(d.id, 'vencimento', parseInt(e.target.value))} onBlur={()=>handleSyncById(d.id)}/></div>
+                                                <div><label className="premium-label">Entrada (R$)</label><input className="premium-input" value={d.entrada || ''} onChange={e=>handleLocalEdit(d.id, 'entrada', e.target.value)} onBlur={()=>handleSyncById(d.id)} placeholder="0.00"/></div>
+                                                <div><label className="premium-label">Vencimento (Dia)</label><input className="premium-input" type="number" min="1" max="31" value={d.vencimento || 5} onChange={e=>handleLocalEdit(d.id, 'vencimento', e.target.value)} onBlur={()=>handleSyncById(d.id)}/></div>
                                             </div>
                                         )}
                                         
@@ -290,8 +304,15 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                         </div>
                                         
                                         <div className="premium-form-row" style={{alignItems: 'center', marginTop: '5px'}}>
-                                            <select className="premium-select" style={{flex: 1}} value={d.status || 'pendente'} onChange={e=>{handleLocalEdit(d.id, 'status', e.target.value); handleSync({...d, status: e.target.value})}}>
-                                                <option value="pendente">Pendente</option><option value="andamento">Negociação</option><option value="quitado">Quitado</option>
+                                            <select 
+                                                className="premium-select" 
+                                                style={{flex: 1}} 
+                                                value={d.status || 'pendente'} 
+                                                onChange={e => handleStatusChange(d.id, e.target.value)}
+                                            >
+                                                <option value="pendente">Pendente</option>
+                                                <option value="andamento">Negociação</option>
+                                                <option value="quitado">Quitado</option>
                                             </select>
                                             {onScheduleTask && <button style={{background: 'none', border: 'none', color: '#3498db', cursor: 'pointer', fontSize: '13px', marginLeft: '5px'}} onClick={()=>onScheduleTask({title: `Conta: ${d.banco} - ${d.titular}`, referenceId: d.id, referenceType: 'DEBT'})}>Agendar Tarefa</button>}
                                             <button className="premium-remove-link" onClick={()=>{if(window.confirm("Remover conta?")) onRemove(d.id)}}>Remover</button>
