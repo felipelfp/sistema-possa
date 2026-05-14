@@ -102,7 +102,12 @@ export function HistorySection({ selectedDate, dayData }: any) {
     );
 }
 
-export default function DeliveriesDashboard() {
+interface DeliveriesDashboardProps {
+    onDeposit?: (deposit: any, objectiveId?: string) => void;
+    exchangeRate?: number;
+}
+
+export default function DeliveriesDashboard({ onDeposit, exchangeRate = 5.0 }: DeliveriesDashboardProps = {}) {
     const deliveryApi = useDeliveryData();
     const { data, getDataHoje, getDadosDia, registrarEntrada, registrarSaida, registrarKm, registrarGanho, registrarGastos, resetarTudo, resetarOleo, getMetaDoDia } = deliveryApi;
     const [currentTime, setCurrentTime] = useState('--:--');
@@ -139,7 +144,22 @@ export default function DeliveriesDashboard() {
         const ganho = parseFloat(ganhoInput);
         if (ganho > 0) {
             registrarGanho(ganho);
-            alert(`R$ ${ganho.toFixed(2)} adicionados aos ganhos de hoje!`);
+
+            if (onDeposit) {
+                const now = new Date();
+                const time = now.toTimeString().split(' ')[0].substring(0, 5);
+                const amountUSD = exchangeRate > 0 ? parseFloat((ganho / exchangeRate).toFixed(2)) : 0;
+                onDeposit({
+                    id: 0,
+                    date: hoje,
+                    time,
+                    amountBRL: ganho,
+                    amountUSD,
+                    bank: 'Entrega do Dia'
+                });
+            }
+
+            alert(`R$ ${ganho.toFixed(2)} adicionados aos ganhos de hoje e ao Acumulado (Visão Geral) automaticamente!`);
             setGanhoInput('');
         }
     };
@@ -207,9 +227,38 @@ export default function DeliveriesDashboard() {
                         <input type="number" value={ganhoInput} onChange={(e) => setGanhoInput(e.target.value)} />
                     </div>
                     <button className="del-btn" onClick={handleRegistrarGanho}>Registrar Ganho</button>
+                    <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                        ✨ Vai automaticamente para o Acumulado (Visão Geral)
+                    </div>
                     <div style={{ marginTop: '16px' }}>
                         <div className="del-card-value del-positive">R$ {dadosHoje.ganhos.toFixed(2)}</div>
                     </div>
+                    <button 
+                        className="del-btn del-btn-success" 
+                        style={{ marginTop: '12px', fontSize: '0.85rem' }}
+                        onClick={() => {
+                            if (dadosHoje.ganhos > 0) {
+                                const now = new Date();
+                                const time = now.toTimeString().split(' ')[0].substring(0, 5);
+                                const amountUSD = exchangeRate > 0 ? parseFloat((dadosHoje.ganhos / exchangeRate).toFixed(2)) : 0;
+                                if (onDeposit) {
+                                    onDeposit({
+                                        id: 0,
+                                        date: hoje,
+                                        time,
+                                        amountBRL: dadosHoje.ganhos,
+                                        amountUSD,
+                                        bank: 'Fechamento Entregas do Dia'
+                                    });
+                                    alert(`Sucesso! Saldo total de R$ ${dadosHoje.ganhos.toFixed(2)} enviado para o Acumulado Geral!`);
+                                }
+                            } else {
+                                alert('Nenhum ganho registrado hoje para salvar.');
+                            }
+                        }}
+                    >
+                        Salvar Total do Dia no Acumulado
+                    </button>
                 </DelCard>
 
                 <DelCard title="Gastos" icon="⛽">

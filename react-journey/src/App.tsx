@@ -373,7 +373,7 @@ const AppContent: React.FC = () => {
                 case 'tasks':
                     return <TasksView tasks={tasks} setTasks={setTasks} objectives={objectives} debts={debts} />;
                 case 'entrega':
-                    return <DeliveriesDashboard />;
+                    return <DeliveriesDashboard onDeposit={handleDeposit} exchangeRate={exchangeRate} />;
                 case 'report':
                     return <ReportView accumulatedBRL={accumulatedBRL} objectives={objectives} targetBRL={totalTargetBRL} />;
                 case 'premium':
