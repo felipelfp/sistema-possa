@@ -15,6 +15,7 @@ interface DashboardViewProps {
     objectives: Objective[];
     debts: any[];
     onDelete: (id: number) => void;
+    ganhosDoDia?: number;
 }
 
 const DashboardView: React.FC<DashboardViewProps> = ({
@@ -26,7 +27,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     totalTargetUSD,
     objectives,
     debts,
-    onDelete
+    onDelete,
+    ganhosDoDia = 0
 }) => {
     const targetBRL = totalTargetBRL;
     const targetUSD = totalTargetUSD;
@@ -42,7 +44,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     const progress = targetBRL > 0 ? (accumulatedBRL / targetBRL) * 100 : 0;
 
     const totalDebtsOriginal = debts.reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
-    const totalDebtsProposta = debts.reduce((acc, d) => acc + (parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1), 0);
+    const totalDebtsProposta = debts.reduce((acc, d) => {
+        const vp = parseFloat(d.vlrP) || 0;
+        const q = parseInt(d.qtd) || 1;
+        const ent = d.tipo === 'parcelado' ? (parseFloat(d.entrada) || 0) : 0;
+        return acc + (d.tipo === 'parcelado' ? (vp * q) + ent : vp);
+    }, 0);
 
     return (
         <div className="dashboard-view">
@@ -79,10 +86,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="stat-card glass">
                     <span className="stat-icon">💰</span>
                     <div className="stat-content">
-                        <span className="stat-label">Acumulado</span>
+                        <span className="stat-label">Acumulado Total</span>
                         <span className="stat-value highlight">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(accumulatedBRL)}
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(accumulatedBRL + ganhosDoDia)}
                         </span>
+                        {ganhosDoDia > 0 && (
+                            <span className="stat-sub-value" style={{color: '#10b981', fontWeight: 'bold', fontSize: '0.8rem', marginTop: '2px'}}>
+                                + R$ {ganhosDoDia.toFixed(2)} (Ganhos de Hoje)
+                            </span>
+                        )}
                     </div>
                 </div>
 

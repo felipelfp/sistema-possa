@@ -5,8 +5,9 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
     // 1. Inicialização direta e segura
     const [localDebts, setLocalDebts] = useState<any[]>(Array.isArray(debts) ? debts : []);
     const [filtro, setFiltro] = useState('Todos');
+    const [searchQuery, setSearchQuery] = useState('');
     const [current, setCurrent] = useState(0);
-    const [newDebt, setNewDebt] = useState({ titular: 'Felipe', banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1' });
+    const [newDebt, setNewDebt] = useState({ titular: 'Felipe', banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1', entrada: '', vlrP: '' });
     const [isSaving, setIsSaving] = useState(false);
 
     // Formatador estável
@@ -23,20 +24,23 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
         }
     }, [debts]);
 
-    // Reseta navegação ao trocar titular
+    // Reseta navegação ao trocar titular ou pesquisa
     useEffect(() => {
         setCurrent(0);
-    }, [filtro]);
+    }, [filtro, searchQuery]);
 
     // Lógica Derivada com Proteção Total
     const listaFiltrada = useMemo(() => {
         if (!Array.isArray(localDebts)) return [];
         return localDebts.filter(d => {
             if (!d) return false;
-            if (filtro === 'Todos') return true;
-            return d.titular === filtro;
+            if (filtro !== 'Todos' && d.titular !== filtro) return false;
+            if (searchQuery && searchQuery.trim() !== '') {
+                return d.banco && d.banco.toLowerCase().includes(searchQuery.toLowerCase());
+            }
+            return true;
         });
-    }, [localDebts, filtro]);
+    }, [localDebts, filtro, searchQuery]);
 
     const totals = useMemo(() => {
         let orig = 0, prop = 0;
@@ -48,7 +52,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
             const q = parseInt(d.qtd) || 1;
             const ent = typeof d.entrada === 'number' ? d.entrada : parseFloat(String(d.entrada).replace(',', '.')) || 0;
             orig += v;
-            prop += (vp * q) + (d.tipo === 'parcelado' ? ent : 0);
+            prop += d.tipo === 'parcelado' ? (vp * q) + ent : vp;
         });
         return { orig, prop, eco: Math.max(0, orig - prop) };
     }, [listaFiltrada]);
@@ -121,50 +125,107 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                             </select>
                         </div>
                         <div>
-                            <label className="premium-label">Valor (R$)</label>
+                            <label className="premium-label">Valor Original (R$)</label>
                             <input className="premium-input" type="number" placeholder="0.00" value={newDebt.valor} onChange={e=>setNewDebt({...newDebt, valor: e.target.value})}/>
                         </div>
                         {newDebt.tipo === 'parcelado' && (
-                            <div>
-                                <label className="premium-label">Parcelas</label>
-                                <input className="premium-input" type="number" min="1" value={newDebt.qtd} onChange={e=>setNewDebt({...newDebt, qtd: e.target.value})}/>
-                            </div>
+                            <>
+                                <div>
+                                    <label className="premium-label">Entrada (R$)</label>
+                                    <input className="premium-input" type="number" placeholder="0.00" value={newDebt.entrada} onChange={e=>setNewDebt({...newDebt, entrada: e.target.value})}/>
+                                </div>
+                                <div>
+                                    <label className="premium-label">Valor Parcela (R$)</label>
+                                    <input className="premium-input" type="number" placeholder="0.00" value={newDebt.vlrP} onChange={e=>setNewDebt({...newDebt, vlrP: e.target.value})}/>
+                                </div>
+                                <div>
+                                    <label className="premium-label">Qtd Parcelas</label>
+                                    <input className="premium-input" type="number" min="1" value={newDebt.qtd} onChange={e=>setNewDebt({...newDebt, qtd: e.target.value})}/>
+                                </div>
+                            </>
                         )}
                         <div>
                             <label className="premium-label">Vencimento (Dia)</label>
                             <input className="premium-input" type="number" min="1" max="31" value={newDebt.vencimento} onChange={e=>setNewDebt({...newDebt, vencimento: e.target.value})}/>
                         </div>
                         <button className="premium-btn-primary" onClick={async ()=>{
-                            if(!newDebt.banco || !newDebt.valor || !onAdd) return alert("Informe banco e valor!");
+                            if(!newDebt.banco || !newDebt.valor || !onAdd) return alert("Informe banco e valor original!");
                             setIsSaving(true);
+                            const vOrig = parseFloat(newDebt.valor) || 0;
+                            const isParc = newDebt.tipo === 'parcelado';
                             await onAdd({ 
                                 titular: newDebt.titular, 
                                 banco: newDebt.banco, 
-                                valor: parseFloat(newDebt.valor), 
+                                valor: vOrig, 
                                 tipo: newDebt.tipo, 
-                                vlrP: newDebt.tipo === 'parcelado' ? parseFloat(newDebt.valor) / (parseInt(newDebt.qtd) || 1) : parseFloat(newDebt.valor), 
+                                vlrP: isParc ? (parseFloat(newDebt.vlrP) || 0) : vOrig, 
+                                entrada: isParc ? (parseFloat(newDebt.entrada) || 0) : 0,
                                 qtd: parseInt(newDebt.qtd) || 1, 
                                 status: 'pendente',
                                 vencimento: parseInt(newDebt.vencimento) || 5
                             });
-                            setNewDebt({...newDebt, banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1'});
+                            setNewDebt({ titular: newDebt.titular, banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1', entrada: '', vlrP: '' });
                             setIsSaving(false);
                         }}>+ Novo Registro</button>
                     </div>
                 </div>
 
-                {/* Filtros de Navegação */}
-                <nav className="premium-filter-group">
-                    {['Todos', 'Felipe', 'Fernanda', 'Casa'].map(f => (
-                        <button 
-                            key={f} 
-                            className={`premium-filter-btn ${filtro === f ? 'active' : ''}`} 
-                            onClick={()=>setFiltro(f)}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </nav>
+                {/* Filtros de Navegação e Pesquisa */}
+                <div className="premium-controls-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                    <nav className="premium-filter-group" style={{ margin: 0 }}>
+                        {['Todos', 'Felipe', 'Fernanda', 'Casa'].map(f => (
+                            <button 
+                                key={f} 
+                                className={`premium-filter-btn ${filtro === f ? 'active' : ''}`} 
+                                onClick={()=>setFiltro(f)}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="premium-search-box" style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        background: 'rgba(10, 11, 26, 0.6)', 
+                        border: '1px solid rgba(255, 255, 255, 0.1)', 
+                        borderRadius: '12px', 
+                        padding: '4px 16px',
+                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)'
+                    }}>
+                        <span style={{ marginRight: '10px', opacity: 0.4 }}>🔍</span>
+                        <input 
+                            type="text" 
+                            placeholder="Pesquisar por nome da conta/banco..." 
+                            value={searchQuery} 
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: '#fff', 
+                                width: '100%', 
+                                padding: '10px 0', 
+                                outline: 'none', 
+                                fontSize: '0.95rem' 
+                            }}
+                        />
+                        {searchQuery && (
+                            <button 
+                                onClick={() => setSearchQuery('')} 
+                                style={{ 
+                                    background: 'none', 
+                                    border: 'none', 
+                                    color: '#fff', 
+                                    opacity: 0.4, 
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    fontSize: '1rem'
+                                }}
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+                </div>
 
                 {/* Carrossel de Cartões */}
                 <main className="premium-carousel-wrapper">
@@ -193,7 +254,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                         </div>
                                         
                                         <div className="premium-form-row">
-                                            <div><label className="premium-label">Proposta (R$)</label><input className="premium-input" type="number" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', parseFloat(e.target.value))} onBlur={()=>handleSync(d)}/></div>
+                                            <div><label className="premium-label">{d.tipo === 'parcelado' ? 'Valor Parcela (R$)' : 'Proposta (R$)'}</label><input className="premium-input" type="number" value={d.vlrP || ''} onChange={e=>handleLocalEdit(d.id, 'vlrP', parseFloat(e.target.value))} onBlur={()=>handleSync(d)}/></div>
                                             <div><label className="premium-label">Parcelas</label><input className="premium-input" type="number" value={d.qtd || 1} readOnly={d.tipo==='avista'} onChange={e=>handleLocalEdit(d.id, 'qtd', parseInt(e.target.value))} onBlur={()=>handleSync(d)}/></div>
                                         </div>
                                         
@@ -205,7 +266,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                         )}
                                         
                                         <div className="premium-eco-label">
-                                            Total: {fmt.format((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1) + (d.tipo === 'parcelado' ? (parseFloat(d.entrada) || 0) : 0))} | Eco: {fmt.format((parseFloat(d.valor) || 0) - (((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (d.tipo === 'parcelado' ? (parseFloat(d.entrada) || 0) : 0)))}
+                                            Total: {fmt.format(d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0)} | Eco: {fmt.format((parseFloat(d.valor) || 0) - (d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0))}
                                         </div>
                                         
                                         <div className="premium-form-row" style={{alignItems: 'center', marginTop: '5px'}}>
@@ -259,7 +320,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                     <tr key={d.id || `r-${i}`}>
                                         <td style={{fontWeight: 600}}>{d.banco}</td>
                                         <td>{fmt.format(d.valor || 0)}</td>
-                                        <td style={{color: 'var(--premium-warning)'}}>{fmt.format((d.vlrP || 0) * (d.qtd || 1) + (d.tipo === 'parcelado' ? (parseFloat(d.entrada) || 0) : 0))}</td>
+                                        <td style={{color: 'var(--premium-warning)'}}>{fmt.format(d.tipo === 'parcelado' ? ((d.vlrP || 0) * (d.qtd || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0)}</td>
                                         <td className={`status-${d.status || 'pendente'}`}>{(d.status || 'pendente').toUpperCase()}</td>
                                         {onScheduleTask && <td>
                                             <button style={{background: 'rgba(52, 152, 219, 0.2)', border: '1px solid #3498db', color: '#3498db', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem'}} onClick={()=>onScheduleTask({title: `Conta: ${d.banco} - ${d.titular}`, referenceId: d.id, referenceType: 'DEBT'})}>Agendar Tarefa</button>

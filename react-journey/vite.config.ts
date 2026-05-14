@@ -8,7 +8,8 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+            injectRegister: 'auto',
+            includeAssets: ['favicon.svg', 'icon.svg'],
             manifest: {
                 name: 'Sistema Possa',
                 short_name: 'Possa',
@@ -16,18 +17,29 @@ export default defineConfig({
                 theme_color: '#0A0B1A',
                 background_color: '#0A0B1A',
                 display: 'standalone',
+                start_url: './',
+                scope: './',
                 icons: [
                     {
-                        src: 'icon-192x192.png',
+                        src: 'icon.svg',
                         sizes: '192x192',
-                        type: 'image/png'
+                        type: 'image/svg+xml',
+                        purpose: 'any'
                     },
                     {
-                        src: 'icon-512x512.png',
+                        src: 'icon.svg',
                         sizes: '512x512',
-                        type: 'image/png'
+                        type: 'image/svg+xml',
+                        purpose: 'any maskable'
                     }
                 ]
+            },
+            workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+            },
+            devOptions: {
+                enabled: true,
+                type: 'module'
             }
         })
     ],

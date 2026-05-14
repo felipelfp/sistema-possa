@@ -47,6 +47,135 @@ export const initialDebts = [
     { id: 27, titular: "Felipe", banco: "Banco Pan (BTG)", valor: 52963.55, tipo: "avista", vlrP: 8956.14, qtd: 1, status: "pendente" }
 ];
 
+const DebtNotificationTray: React.FC<{ debts: any[]; onUpdateDebt: (d: any) => void }> = ({ debts, onUpdateDebt }) => {
+    const [notificacoesVisiveis, setNotificacoesVisiveis] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!debts || !Array.isArray(debts)) return;
+        
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+        }
+
+        const hoje = new Date();
+        const diaAtual = hoje.getDate();
+        const amanha = new Date(hoje.getFullYear(), hoje.getMonth(), diaAtual + 1);
+        const diaAmanha = amanha.getDate();
+
+        const contasAlvo = debts.filter(d => {
+            if (!d || d.status === 'quitado') return false;
+            const v = parseInt(d.vencimento) || 5;
+            return v === diaAtual || v === diaAmanha;
+        });
+
+        setNotificacoesVisiveis(contasAlvo);
+
+        contasAlvo.forEach(d => {
+            const v = parseInt(d.vencimento) || 5;
+            const tipoDia = v === diaAtual ? 'HOJE' : 'AMANHÃ';
+            const storageKey = `notif_sent_${d.id}_${hoje.toISOString().split('T')[0]}`;
+            const sentCount = parseInt(localStorage.getItem(storageKey) || '0');
+
+            if (sentCount < 2 && 'Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(`Lembrete de Conta: ${d.banco}`, {
+                        body: `Sua conta de ${d.titular} vence ${tipoDia} (Dia ${v}). Já realizou o pagamento?`,
+                        icon: '/icon.svg'
+                    });
+                    localStorage.setItem(storageKey, String(sentCount + 1));
+                } catch (e) {
+                    console.error('Erro ao enviar notificacao nativa:', e);
+                }
+            }
+        });
+    }, [debts]);
+
+    if (notificacoesVisiveis.length === 0) return null;
+
+    return (
+        <div className="debt-notification-tray" style={{
+            margin: '0 24px 20px 24px',
+            padding: '16px',
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.25))',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', fontWeight: 'bold' }}>
+                    <span>⚠️</span>
+                    <span>Lembrete de Vencimento (Amanhã e Hoje)</span>
+                </div>
+                <span style={{ fontSize: '0.8rem', color: '#a1a1aa' }}>Notificação dupla diária ativa</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {notificacoesVisiveis.map((d, index) => {
+                    const v = parseInt(d.vencimento) || 5;
+                    const isHoje = v === new Date().getDate();
+                    const vlr = d.tipo === 'parcelado' ? ((parseFloat(d.vlrP) || 0) * (parseInt(d.qtd) || 1)) + (parseFloat(d.entrada) || 0) : parseFloat(d.vlrP) || 0;
+                    return (
+                        <div key={d.id || index} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            borderLeft: `4px solid ${isHoje ? '#ef4444' : '#f59e0b'}`,
+                            flexWrap: 'wrap',
+                            gap: '10px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <strong style={{ color: '#fff' }}>{d.banco}</strong>
+                                <span style={{ color: '#a1a1aa', fontSize: '0.85rem' }}>({d.titular})</span>
+                                <span style={{
+                                    background: isHoje ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                    color: isHoje ? '#ef4444' : '#f59e0b',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold'
+                                }}>
+                                    Vence {isHoje ? 'HOJE' : 'AMANHÃ'} (Dia {v})
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ color: '#e4e4e7', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(vlr)}
+                                </span>
+                                <button style={{
+                                    background: '#10b981',
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)'
+                                }} onClick={() => {
+                                    if (window.confirm(`Confirmar pagamento de ${d.banco}? O status mudará para Quitado.`)) {
+                                        onUpdateDebt({ ...d, status: 'quitado' });
+                                    }
+                                }}>
+                                    ✅ Já Paguei
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 const AppContent: React.FC = () => {
     const { theme } = useTheme();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -57,6 +186,7 @@ const AppContent: React.FC = () => {
     const [debts, setDebts] = useState<any[]>(initialDebts);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     
     // Global Task Scheduling
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -84,6 +214,13 @@ const AppContent: React.FC = () => {
         if (savedAuth === 'true') {
             setIsAuthenticated(true);
         }
+
+        const handleBeforeInstall = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     }, []);
 
     useEffect(() => {
@@ -274,6 +411,21 @@ const AppContent: React.FC = () => {
     const totalTargetBRL = totalDebtsBRL + totalObjectivesBRL;
     const totalTargetUSD = exchangeRate > 0 ? totalTargetBRL / exchangeRate : 0;
 
+    const getGanhosDoDiaPendentes = () => {
+        try {
+            const dias = JSON.parse(localStorage.getItem('delivery_dias') || '{}');
+            const hoje = new Date().toISOString().split('T')[0];
+            const ganhosHoje = dias[hoje]?.ganhos || 0;
+            const depositadoHoje = transactions
+                .filter(tx => tx.date === hoje && typeof tx.bank === 'string' && tx.bank.toLowerCase().includes('entrega'))
+                .reduce((sum, tx) => sum + tx.amountBRL, 0);
+            return Math.max(0, ganhosHoje - depositadoHoje);
+        } catch {
+            return 0;
+        }
+    };
+    const ganhosDoDia = getGanhosDoDiaPendentes();
+
     const renderContent = () => {
         try {
             switch (activeSection) {
@@ -289,6 +441,7 @@ const AppContent: React.FC = () => {
                             objectives={objectives}
                             debts={debts}
                             onDelete={handleDeleteTransaction}
+                            ganhosDoDia={ganhosDoDia}
                         />
                     );
                 case 'meta':
@@ -398,6 +551,7 @@ const AppContent: React.FC = () => {
                             objectives={objectives}
                             debts={debts}
                             onDelete={handleDeleteTransaction}
+                            ganhosDoDia={ganhosDoDia}
                         />
                     );
             }
@@ -447,6 +601,36 @@ const AppContent: React.FC = () => {
                         </div>
 
                         <div className="header-controls">
+                            {deferredPrompt && (
+                                <button 
+                                    className="install-app-btn"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
+                                        fontSize: '0.85rem'
+                                    }}
+                                    onClick={async () => {
+                                        if (deferredPrompt) {
+                                            deferredPrompt.prompt();
+                                            const { outcome } = await deferredPrompt.userChoice;
+                                            if (outcome === 'accepted') {
+                                                setDeferredPrompt(null);
+                                            }
+                                        }
+                                    }}
+                                >
+                                    📲 Baixar App
+                                </button>
+                            )}
                             <TaskNotificationWidget tasks={tasks} onOpenTasks={() => setActiveSection('tasks')} />
                             <Clock />
                             <div className="total-goal-badge">
@@ -472,6 +656,8 @@ const AppContent: React.FC = () => {
                             </div>
                         </div>
                     </header>
+
+                    <DebtNotificationTray debts={debts} onUpdateDebt={handleDebtCRUD.update} />
 
                     <div className="content-area">
                         {renderContent()}
