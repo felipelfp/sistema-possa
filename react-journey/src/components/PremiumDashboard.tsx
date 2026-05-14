@@ -20,6 +20,8 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
     const [current, setCurrent] = useState(0);
     const [newDebt, setNewDebt] = useState({ titular: 'Felipe', banco: '', valor: '', vencimento: '5', tipo: 'avista', qtd: '1', entrada: '', vlrP: '' });
     const [isSaving, setIsSaving] = useState(false);
+    const [isAddPanelOpen, setIsAddPanelOpen] = useState(window.innerWidth > 768); // Fecha no mobile por padrão
+
 
     // Formatador estável
     const fmt = useMemo(() => new Intl.NumberFormat('pt-BR', { 
@@ -138,8 +140,15 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                 </header>
 
                 {/* Área de Adição Rápida */}
-                <div className="premium-panel">
-                    <div className="premium-grid-add">
+                <div className={`premium-panel ${isAddPanelOpen ? 'open' : 'closed'}`}>
+                    <div className="premium-panel-header" onClick={() => setIsAddPanelOpen(!isAddPanelOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isAddPanelOpen ? '15px' : '0' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--premium-accent)' }}>+ Novo Registro</h3>
+                        <span style={{ fontSize: '1.2rem' }}>{isAddPanelOpen ? '−' : '+'}</span>
+                    </div>
+                    
+                    {isAddPanelOpen && (
+                        <div className="premium-grid-add">
+
                         <div>
                             <label className="premium-label">Responsável</label>
                             <select className="premium-select" value={newDebt.titular} onChange={e=>setNewDebt({...newDebt, titular: e.target.value})}>
@@ -205,7 +214,7 @@ const PremiumDashboard: React.FC<any> = ({ debts = [], onAdd, onUpdate, onRemove
                                 setIsSaving(false);
                             }}>+ Novo Registro</button>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Filtros de Navegação e Pesquisa */}

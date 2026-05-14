@@ -76,10 +76,21 @@ interface ObjectivesProps {
 const Objectives: React.FC<ObjectivesProps> = ({ category, objectives, onToggleComplete, onAddObjective, onDeleteObjective, exchangeRate, onScheduleTask }) => {
     const [isAdding, setIsAdding] = React.useState(false);
     const [newObj, setNewObj] = React.useState({ name: '', targetBRL: '', icon: '🎯' });
+    const [current, setCurrent] = React.useState(0);
 
     const filteredObjectives = objectives
         .filter(obj => obj.category === category)
         .sort((a, b) => a.targetBRL - b.targetBRL);
+
+    // Reset current when category changes
+    React.useEffect(() => {
+        setCurrent(0);
+    }, [category]);
+
+    const move = (dir: number) => {
+        const total = filteredObjectives.length + 1; // +1 para o card de adição
+        setCurrent(prev => (prev + dir + total) % total);
+    };
 
     const handleAdd = () => {
         if (!newObj.name || !newObj.targetBRL) return;
@@ -111,122 +122,116 @@ const Objectives: React.FC<ObjectivesProps> = ({ category, objectives, onToggleC
     return (
         <div className="objectives-section">
             <h2 className="objectives-title">Objetivos {category}</h2>
-            <div className="objectives-list">
-                {/* --- CARD DE ADIÇÃO --- */}
-                {!isAdding ? (
-                    <div className="objective-card-add-trigger" onClick={() => setIsAdding(true)}>
-                        <span className="add-plus-icon">+</span>
-                        <span className="add-text">Adicionar Objetivo {category}</span>
-                    </div>
-                ) : (
-                    <div className="objective-card-expanded add-mode glass">
-                        <div className="card-header">
-                            <input 
-                                className="icon-input-premium"
-                                type="text" 
-                                value={newObj.icon} 
-                                onChange={e => setNewObj({...newObj, icon: e.target.value})}
-                                placeholder="🎯"
-                            />
-                            <div className="header-info">
-                                <input 
-                                    className="name-input-premium"
-                                    type="text" 
-                                    value={newObj.name} 
-                                    onChange={e => setNewObj({...newObj, name: e.target.value})}
-                                    placeholder="Nome do Objetivo..."
-                                    autoFocus
-                                />
-                            </div>
-                        </div>
-
-                        <div className="card-body">
-                            <div className="stat-row">
-                                <span>Meta BRL (R$)</span>
-                                <input 
-                                    className="value-input-premium"
-                                    type="number" 
-                                    value={newObj.targetBRL} 
-                                    onChange={e => setNewObj({...newObj, targetBRL: e.target.value})}
-                                    placeholder="0,00"
-                                />
-                            </div>
-                            <div className="add-card-actions">
-                                <button className="cancel-add-btn" onClick={() => setIsAdding(false)}>Cancelar</button>
-                                <button className="confirm-add-btn-premium" onClick={handleAdd}>Salvar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {filteredObjectives.map((obj) => {
-                    const { displayTargetBRL, displayTargetUSD } = getDisplayValues(obj);
-                    return (
-                        <div
-                            key={obj.id}
-                            className={`objective-card-expanded glass ${obj.completed ? 'completed' : ''}`}
-                        >
-                            <div className="card-header">
-                                <span className="objective-icon">{obj.icon}</span>
-                                <div className="header-info">
-                                    <h3 className="card-title">{obj.name}</h3>
-                                    <div className="status-badge">
-                                        {obj.completed ? 'Concluído' : 'Em andamento'}
-                                    </div>
+            <div className="premium-carousel-wrapper" style={{maxWidth: '600px', margin: '0 auto'}}>
+                <div className="premium-carousel-container">
+                    <div className="premium-carousel-track" style={{ transform: `translateX(-${current * 100}%)` }}>
+                        
+                        {/* --- CARD DE ADIÇÃO (Como um Slide) --- */}
+                        <div className="premium-carousel-slide">
+                            {!isAdding ? (
+                                <div className="objective-card-add-trigger" style={{height: '350px'}} onClick={() => setIsAdding(true)}>
+                                    <span className="add-plus-icon">+</span>
+                                    <span className="add-text">Novo Objetivo {category}</span>
                                 </div>
-                                <div className="card-actions-top">
-                                    <button 
-                                        className="delete-obj-btn"
-                                        onClick={() => onDeleteObjective(obj.id)}
-                                        title="Excluir Objetivo"
-                                    >
-                                        ×
-                                    </button>
-                                    <label className="complete-checkbox-compact">
-                                        <input
-                                            type="checkbox"
-                                            checked={obj.completed}
-                                            onChange={() => onToggleComplete(obj.id)}
+                            ) : (
+                                <div className="objective-card-expanded add-mode glass" style={{height: '350px'}}>
+                                    <div className="card-header">
+                                        <input 
+                                            className="icon-input-premium"
+                                            type="text" 
+                                            value={newObj.icon} 
+                                            onChange={e => setNewObj({...newObj, icon: e.target.value})}
+                                            placeholder="🎯"
                                         />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="card-body">
-                                <div className="stat-row">
-                                    <span>Meta (BRL)</span>
-                                    <strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayTargetBRL)}</strong>
-                                </div>
-                                <div className="stat-row">
-                                    <span>Meta (USD)</span>
-                                    <strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(displayTargetUSD)}</strong>
-                                </div>
-                                <div className="stat-row">
-                                    <span>Acumulado (BRL)</span>
-                                    <strong className="highlight-value">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obj.accumulatedBRL)}</strong>
-                                </div>
-                                <div className="stat-row">
-                                    <span>Acumulado (USD)</span>
-                                    <strong className="highlight-value-usd">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(obj.accumulatedBRL / exchangeRate)}</strong>
-                                </div>
-                                {onScheduleTask && (
-                                    <div className="card-scheduler">
-                                        <button 
-                                            className="schedule-task-btn" 
-                                            onClick={() => onScheduleTask({
-                                                title: `Lembrete: Objetivo ${obj.name}`,
-                                                referenceId: obj.id, 
-                                                referenceType: 'OBJECTIVE'
-                                            })}
-                                        >
-                                            ⏳ Agendar Tarefa
-                                        </button>
+                                        <div className="header-info">
+                                            <input 
+                                                className="name-input-premium"
+                                                type="text" 
+                                                value={newObj.name} 
+                                                onChange={e => setNewObj({...newObj, name: e.target.value})}
+                                                placeholder="Nome do Objetivo..."
+                                                autoFocus
+                                            />
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                    <div className="card-body">
+                                        <div className="stat-row">
+                                            <span>Meta BRL (R$)</span>
+                                            <input 
+                                                className="value-input-premium"
+                                                type="number" 
+                                                value={newObj.targetBRL} 
+                                                onChange={e => setNewObj({...newObj, targetBRL: e.target.value})}
+                                                placeholder="0,00"
+                                            />
+                                        </div>
+                                        <div className="add-card-actions">
+                                            <button className="cancel-add-btn" onClick={() => setIsAdding(false)}>Cancelar</button>
+                                            <button className="confirm-add-btn-premium" onClick={handleAdd}>Salvar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    );
-                })}
+
+                        {/* --- CARDS DOS OBJETIVOS --- */}
+                        {filteredObjectives.map((obj) => {
+                            const { displayTargetBRL, displayTargetUSD } = getDisplayValues(obj);
+                            return (
+                                <div key={obj.id} className="premium-carousel-slide">
+                                    <div className={`objective-card-expanded glass ${obj.completed ? 'completed' : ''}`} style={{height: '350px'}}>
+                                        <div className="card-header">
+                                            <span className="objective-icon">{obj.icon}</span>
+                                            <div className="header-info">
+                                                <h3 className="card-title">{obj.name}</h3>
+                                                <div className={`status-badge ${obj.completed ? 'completed' : ''}`}>
+                                                    {obj.completed ? 'CONCLUÍDO' : 'PENDENTE'}
+                                                </div>
+                                            </div>
+                                            <div className="card-actions-top">
+                                                <button className="delete-obj-btn" onClick={() => onDeleteObjective(obj.id)}>×</button>
+                                                <label className="complete-checkbox-compact">
+                                                    <input type="checkbox" checked={obj.completed} onChange={() => onToggleComplete(obj.id)} />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="card-body">
+                                            <div className="stat-row">
+                                                <span>Meta</span>
+                                                <strong>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayTargetBRL)}</strong>
+                                            </div>
+                                            <div className="stat-row">
+                                                <span>Meta (USD)</span>
+                                                <strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(displayTargetUSD)}</strong>
+                                            </div>
+                                            <div className="stat-row">
+                                                <span>Acumulado</span>
+                                                <strong className="highlight-value">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obj.accumulatedBRL)}</strong>
+                                            </div>
+                                            <div className="stat-row">
+                                                <span>Falta</span>
+                                                <strong style={{color: '#ef4444'}}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.max(0, displayTargetBRL - obj.accumulatedBRL))}</strong>
+                                            </div>
+                                            {onScheduleTask && (
+                                                <button className="schedule-task-btn" onClick={() => onScheduleTask({title: `Meta: ${obj.name}`, referenceId: obj.id, referenceType: 'OBJECTIVE'})}>Agendar Tarefa</button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Controles do Carrossel */}
+                <div className="premium-nav-controls" style={{marginTop: '15px'}}>
+                    <button className="premium-nav-btn" onClick={() => move(-1)}>‹</button>
+                    <div className="premium-nav-info">
+                        <span>{current + 1} / {filteredObjectives.length + 1}</span>
+                    </div>
+                    <button className="premium-nav-btn" onClick={() => move(1)}>›</button>
+                </div>
             </div>
         </div>
     );

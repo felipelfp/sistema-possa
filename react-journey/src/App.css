@@ -1,18 +1,17 @@
 .app-layout {
     display: flex;
-    height: 125vh; /* 100vh / 0.8 = 125vh para preencher o fundo da tela real */
-    width: 125vw;  /* 100vw / 0.8 = 125vw para preencher a largura da tela real */
+    height: 100%;
+    width: 100%;
     overflow: hidden;
     padding: 0;
     box-sizing: border-box;
-    /* Zoom está no body no index.css */
 }
 
 .main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100%; /* Ocupar 100% do pai compensado (125vh) */
+    height: 100%;
     border-radius: 0;
     position: relative;
     overflow: hidden;
