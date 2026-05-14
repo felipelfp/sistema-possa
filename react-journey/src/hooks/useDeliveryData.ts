@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_DELIVERY_API_URL || 'http://localhost:5082/api/delivery';
+let envDeliveryApiUrl = import.meta.env.VITE_DELIVERY_API_URL;
+if (envDeliveryApiUrl && envDeliveryApiUrl.includes('localhost') && window.location.hostname !== 'localhost') {
+    envDeliveryApiUrl = envDeliveryApiUrl.replace('localhost', window.location.hostname);
+}
+const API_URL = envDeliveryApiUrl || `http://${window.location.hostname}:5000/api/delivery`;
 
-const INITIAL_DATA = {
-    dias: {} as Record<string, any>,
-    kmAnterior: 0,
-    kmOleo: 0,
+const getLocal = (key: string) => {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+};
+
+const setLocal = (key: string, data: any) => {
+    localStorage.setItem(key, JSON.stringify(data));
 };
 
 export const METAS = {
@@ -15,12 +22,33 @@ export const METAS = {
 };
 
 export function useDeliveryData() {
-    const [data, setData] = useState(INITIAL_DATA);
+    const [data, setData] = useState(() => {
+        const cachedDias = getLocal('delivery_dias') || {};
+        const cachedKmAnterior = getLocal('delivery_kmAnterior') || 0;
+        const cachedKmOleo = getLocal('delivery_kmOleo') || 0;
+        return {
+            dias: cachedDias,
+            kmAnterior: cachedKmAnterior,
+            kmOleo: cachedKmOleo,
+        };
+    });
     const [loading, setLoading] = useState(true);
 
     const getDataHoje = () => {
         const hoje = new Date();
         return hoje.toISOString().split("T")[0];
+    };
+
+    const saveDiaToServerSilent = async (dia: any) => {
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dia)
+            });
+        } catch (e) {
+            // Silencioso
+        }
     };
 
     const fetchData = async () => {
@@ -36,14 +64,28 @@ export function useDeliveryData() {
                     if (d.kmFinal > maxKm) maxKm = d.kmFinal;
                 });
 
-                setData({
-                    dias: diasMap,
-                    kmAnterior: maxKm,
-                    kmOleo: 0 
+                // Auto-sincronizar dias locais offline que ainda não estão no servidor
+                const cachedDias = getLocal('delivery_dias') || {};
+                for (const dateStr in cachedDias) {
+                    if (!diasMap[dateStr]) {
+                        saveDiaToServerSilent(cachedDias[dateStr]);
+                        diasMap[dateStr] = cachedDias[dateStr];
+                    }
+                }
+
+                setData(prev => {
+                    const updated = {
+                        dias: diasMap,
+                        kmAnterior: maxKm > prev.kmAnterior ? maxKm : prev.kmAnterior,
+                        kmOleo: prev.kmOleo 
+                    };
+                    setLocal('delivery_dias', updated.dias);
+                    setLocal('delivery_kmAnterior', updated.kmAnterior);
+                    return updated;
                 });
             }
         } catch (error) {
-            console.error("Erro ao buscar dados:", error);
+            console.error("Erro ao buscar dados da API, usando cache offline garantido no App/Site:", error);
         } finally {
             setLoading(false);
         }
@@ -54,15 +96,27 @@ export function useDeliveryData() {
     }, []);
 
     const saveDia = async (dia: any) => {
+        // Atualização otimista imediata para garantir salvamento no App e Site instantaneamente
+        setData(prev => {
+            const updatedDias = { ...prev.dias, [dia.data]: dia };
+            let maxKm = prev.kmAnterior;
+            if (dia.kmFinal > maxKm) maxKm = dia.kmFinal;
+            
+            setLocal('delivery_dias', updatedDias);
+            setLocal('delivery_kmAnterior', maxKm);
+            return { ...prev, dias: updatedDias, kmAnterior: maxKm };
+        });
+
         try {
             await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dia)
             });
+            // Busca dados frescos em segundo plano
             fetchData(); 
         } catch (error) {
-            console.error("Erro ao salvar dia:", error);
+            console.error("Erro ao salvar na API. Os dados estão salvos offline de forma segura:", error);
         }
     };
 
@@ -135,7 +189,9 @@ export function useDeliveryData() {
             metaBatida
         });
 
-        setData(prev => ({ ...prev, kmOleo: alertaOleo ? 0 : kmOleoAtual }));
+        const novoKmOleo = alertaOleo ? 0 : kmOleoAtual;
+        setData(prev => ({ ...prev, kmOleo: novoKmOleo }));
+        setLocal('delivery_kmOleo', novoKmOleo);
 
         return { kmRodados, alertaOleo };
     };
@@ -163,6 +219,7 @@ export function useDeliveryData() {
 
     const resetarOleo = () => {
         setData(prev => ({ ...prev, kmOleo: 0 }));
+        setLocal('delivery_kmOleo', 0);
     };
 
     const getMetaDoDia = (dataStr?: string) => {

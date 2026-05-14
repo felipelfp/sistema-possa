@@ -1,7 +1,11 @@
 import { Objective } from '../components/Objectives';
 import { Deposit } from '../components/DepositForm';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5011/api`;
+let envApiUrl = import.meta.env.VITE_API_URL;
+if (envApiUrl && envApiUrl.includes('localhost') && window.location.hostname !== 'localhost') {
+    envApiUrl = envApiUrl.replace('localhost', window.location.hostname);
+}
+const API_URL = envApiUrl || `http://${window.location.hostname}:5000/api`;
 
 // Helper for local storage fallback
 const getLocal = (key: string) => {
