@@ -87,11 +87,11 @@
     }
 
     .page-title {
-        display: none; /* Remove 'Painel' / 'Dashboard' no mobile conforme solicitado */
+        display: none !important; /* Remove 'Painel' / 'Dashboard' no mobile */
     }
 
     .total-goal-badge {
-        display: none; /* Remove meta total no mobile para dar espaço ao dólar */
+        display: none !important; /* Remove meta total no mobile para dar espaço ao dólar */
     }
 
     .exchange-rate-badge {
