@@ -269,31 +269,27 @@ const AppContent: React.FC = () => {
 
             const dbts = await api.getDebts();
             if (Array.isArray(dbts)) {
-                let loadedDebts = dbts;
-                if (loadedDebts.length === 0) {
-                    loadedDebts = [...initialDebts];
-                    // Auto-seed no backend para persistir
-                    setTimeout(async () => {
-                        for (const d of initialDebts) {
-                            await api.addDebt(d).catch(() => {});
-                        }
-                    }, 1000);
-                } else {
-                    const combined = [...initialDebts];
-                    loadedDebts.forEach((apiDebt: any) => {
-                        const matchIndex = combined.findIndex(d => 
-                            String(d.id) === String(apiDebt.id) || 
-                            (d.banco === apiDebt.banco && d.titular === apiDebt.titular)
-                        );
-                        if (matchIndex === -1) {
-                            combined.push(apiDebt);
-                        } else {
-                            combined[matchIndex] = { ...combined[matchIndex], ...apiDebt };
-                        }
-                    });
-                    loadedDebts = combined;
-                }
-                setDebts(loadedDebts);
+                // Aplica overrides salvos para contas padrão (edições feitas pelo usuário)
+                const debtOverrides: Record<string, any> = JSON.parse(localStorage.getItem('debt_overrides') || '{}');
+                const baseDebts = initialDebts.map(d => {
+                    const override = debtOverrides[String(d.id)];
+                    return override ? { ...d, ...override } : d;
+                });
+                // O banco só tem contas criadas pelo usuário (com id que começa com 'user-' ou timestamp)
+                const contasDoUsuario = dbts.filter((apiDebt: any) => {
+                    // Filtra somente contas verdadeiramente novas (criadas pelo usuário via UI)
+                    // Contas do código têm IDs numéricos de 1-99; contas do usuário têm ID string longo ou timestamp
+                    const debtId = String(apiDebt.id || '');
+                    const isNumericShortId = /^\d{1,2}$/.test(debtId);
+                    if (isNumericShortId) return false; // Ignora cópias das contas padrão no banco
+                    // Verifica se não é duplicata das contas padrão por banco+titular
+                    const isDuplicate = baseDebts.some(d =>
+                        d.banco === apiDebt.banco && d.titular === apiDebt.titular
+                    );
+                    return !isDuplicate;
+                });
+                // Combina: sempre as 18 padrão (com overrides) + contas novas do usuário
+                setDebts([...baseDebts, ...contasDoUsuario]);
             }
             
             const tsks = await api.getTasks();
@@ -394,6 +390,14 @@ const AppContent: React.FC = () => {
             const oldDebt = debts.find(item => item.id === d.id);
             await api.updateDebt(d);
             setDebts(prev => prev.map(item => item.id === d.id ? d : item));
+            
+            // Persiste edições de contas padrão (ID numérico curto) no localStorage
+            const debtId = String(d.id || '');
+            if (/^\d{1,2}$/.test(debtId)) {
+                const overrides: Record<string, any> = JSON.parse(localStorage.getItem('debt_overrides') || '{}');
+                overrides[debtId] = { status: d.status, vlrP: d.vlrP, qtd: d.qtd, entrada: d.entrada, vencimento: d.vencimento, tipo: d.tipo };
+                localStorage.setItem('debt_overrides', JSON.stringify(overrides));
+            }
             
             // Re-generate if newly parcelado or vencimento changed
             if (d.tipo === 'parcelado' && (!oldDebt || oldDebt.tipo !== 'parcelado' || oldDebt.vencimento !== d.vencimento)) {
